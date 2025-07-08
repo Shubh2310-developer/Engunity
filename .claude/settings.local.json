@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(pip install:*)",
+      "Bash(python test_supabase_connection.py:*)"
+    ],
+    "deny": []
+  }
+}

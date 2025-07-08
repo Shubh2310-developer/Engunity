@@ -1,0 +1,27 @@
+# Core Framework
+fastapi==0.104.1
+uvicorn==0.24.0
+python-multipart==0.0.6
+
+# Supabase Integration
+supabase==2.1.0
+
+# Database (for custom queries if needed)
+asyncpg==0.29.0
+
+# Environment & Configuration
+python-dotenv==1.0.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# CORS & Middleware
+starlette==0.27.0
+
+# Validation
+email-validator==2.1.0
+
+# Date/Time
+python-dateutil==2.8.2
+
+# JSON handling
+orjson==3.9.10

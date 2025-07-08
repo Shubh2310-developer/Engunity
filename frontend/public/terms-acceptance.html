@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms Acceptance - Engunity AI</title>
+    <link rel="icon" href="/assets/images/logo/favicon.png">
+    
+    <!-- CSS Imports -->
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="/styles/themes/dark-theme.css">
+    <link rel="stylesheet" href="/styles/components/buttons.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-bg: #0a0a0f;
+            --secondary-bg: #1a1a2e;
+            --card-bg: rgba(26, 26, 46, 0.9);
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border-color: rgba(99, 102, 241, 0.2);
+            --shadow-primary: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 50px rgba(99, 102, 241, 0.1);
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
+            z-index: -1;
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .terms-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 48px;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: var(--shadow-primary), var(--shadow-glow);
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .terms-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+            border-radius: 24px 24px 0 0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .important-notice {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1));
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 32px 0;
+            text-align: center;
+        }
+
+        .important-notice .icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .important-notice h3 {
+            color: var(--warning-color);
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .important-notice p {
+            color: var(--text-secondary);
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .documents-section {
+            margin: 40px 0;
+        }
+
+        .documents-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .document-card {
+            background: rgba(99, 102, 241, 0.05);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .document-card:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+
+        .document-card h3 {
+            color: var(--accent-primary);
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .document-card .icon {
+            font-size: 24px;
+        }
+
+        .document-card p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .document-card .action-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--accent-primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .document-card .action-button:hover {
+            background: var(--accent-secondary);
+            transform: translateY(-1px);
+        }
+
+        .reading-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 16px;
+            font-size: 14px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .status-indicator.read {
+            background: var(--success-color);
+        }
+
+        .acceptance-section {
+            margin: 32px 0;
+        }
+
+        .acceptance-checklist {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .acceptance-checklist h3 {
+            color: var(--text-primary);
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-group:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .checkbox-input {
+            margin-top: 2px;
+            accent-color: var(--accent-primary);
+            width: 16px;
+            height: 16px;
+        }
+
+        .checkbox-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            cursor: pointer;
+        }
+
+        .checkbox-label a {
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+
+        .checkbox-label a:hover {
+            text-decoration: underline;
+        }
+
+        .final-confirmation {
+            background: rgba(99, 102, 241, 0.05);
+            border: 2px solid var(--accent-primary);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        .final-confirmation h3 {
+            color: var(--accent-primary);
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .final-confirmation p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .final-checkbox {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .final-checkbox input {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--accent-primary);
+        }
+
+        .final-checkbox label {
+            color: var(--text-primary);
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 32px;
+        }
+
+        .action-button {
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .primary-button {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+        }
+
+        .primary-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4);
+        }
+
+        .primary-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .secondary-button {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .secondary-button:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--text-secondary);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin: 24px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 2px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            transform: scale(0.9);
+            transition: all 0.3s ease;
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        @media (max-width: 768px) {
+            .terms-card {
+                padding: 32px 24px;
+                margin: 20px;
+            }
+            
+            .documents-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .title {
+                font-size: 24px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-container"></div>
+    
+    <div class="container">
+        <div class="terms-card">
+            <div class="header">
+                <div class="logo"></div>
+                <h1 class="title">Terms & Conditions</h1>
+                <p class="subtitle">Please review and accept our legal documents to continue</p>
+            </div>
+
+            <div class="important-notice">
+                <div class="icon">⚠️</div>
+                <h3>Important Notice</h3>
+                <p>Before you can access Engunity AI, you must read and accept both our Terms of Use and End User License Agreement. These documents contain important information about your rights and responsibilities when using our platform.</p>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <div class="documents-section">
+                <div class="documents-grid">
+                    <div class="document-card" id="termsCard">
+                        <h3>
+                            <span class="icon">📄</span>
+                            Terms of Use
+                        </h3>
+                        <p>Our Terms of Use outline the rules and regulations for using the Engunity AI platform, including acceptable use policies, privacy considerations, and service limitations.</p>
+                        <a href="/terms-of-use.html" target="_blank" class="action-button">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                                <polyline points="15,3 21,3 21,9"/>
+                                <line x1="10" y1="14" x2="21" y2="3"/>
+                            </svg>
+                            Read Terms of Use
+                        </a>
+                        <div class="reading-status">
+                            <div class="status-indicator" id="termsStatus"></div>
+                            <span id="termsStatusText">Not yet read</span>
+                        </div>
+                    </div>
+
+                    <div class="document-card" id="eulaCard">
+                        <h3>
+                            <span class="icon">📋</span>
+                            End User License Agreement
+                        </h3>
+                        <p>The EULA defines the software licensing terms, intellectual property rights, and legal obligations when using our AI platform and associated services.</p>
+                        <a href="/eula.html" target="_blank" class="action-button">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                                <polyline points="15,3 21,3 21,9"/>
+                                <line x1="10" y1="14" x2="21" y2="3"/>
+                            </svg>
+                            Read EULA
+                        </a>
+                        <div class="reading-status">
+                            <div class="status-indicator" id="eulaStatus"></div>
+                            <span id="eulaStatusText">Not yet read</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="acceptance-section">
+                <div class="acceptance-checklist">
+                    <h3>Acceptance Checklist</h3>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="readTerms" class="checkbox-input">
+                        <label for="readTerms" class="checkbox-label">
+                            I have read and understand the <a href="/terms-of-use.html" target="_blank">Terms of Use</a>
+                        </label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="readEula" class="checkbox-input">
+                        <label for="readEula" class="checkbox-label">
+                            I have read and understand the <a href="/eula.html" target="_blank">End User License Agreement</a>
+                        </label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="agreeTerms" class="checkbox-input">
+                        <label for="agreeTerms" class="checkbox-label">
+                            I agree to be bound by the Terms of Use
+                        </label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="agreeEula" class="checkbox-input">
+                        <label for="agreeEula" class="checkbox-label">
+                            I accept the End User License Agreement
+                        </label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="ageConfirmation" class="checkbox-input">
+                        <label for="ageConfirmation" class="checkbox-label">
+                            I confirm that I am at least 18 years old or have legal guardian consent
+                        </label>
+                    </div>
+                </div>
+
+                <div class="final-confirmation">
+                    <h3>Final Confirmation</h3>
+                    <p>By checking this box, you acknowledge that you have read, understood, and agree to be bound by both documents.</p>
+                    <div class="final-checkbox">
+                        <input type="checkbox" id="finalConfirmation">
+                        <label for="finalConfirmation">I accept all terms and conditions</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="action-button secondary-button" onclick="declineTerms()">
+                    Decline & Exit
+                </button>
+                <button class="action-button primary-button" id="acceptButton" onclick="acceptTerms()" disabled>
+                    Accept & Continue to Login
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmationModal">
+        <div class="modal-content">
+            <h3 style="color: var(--accent-primary); margin-bottom: 16px;">Terms Accepted</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 24px;">Thank you for accepting our terms. You will now be redirected to the login page.</p>
+            <button class="action-button primary-button" onclick="redirectToLogin()">
+                Continue to Login
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Track document reading status
+        let documentsRead = {
+            terms: false,
+            eula: false
+        };
+
+        // Track checkbox states
+        let checkboxStates = {
+            readTerms: false,
+            readEula: false,
+            agreeTerms: false,
+            agreeEula: false,
+            ageConfirmation: false,
+            finalConfirmation: false
+        };
+
+        // Update progress bar
+        function updateProgress() {
+            const totalSteps = 6;
+            const completedSteps = Object.values(checkboxStates).filter(Boolean).length;
+            const progress = (completedSteps / totalSteps) * 100;
+            
+            document.getElementById('progressFill').style.width = progress + '%';
+            
+            // Update accept button state
+            const acceptButton = document.getElementById('acceptButton');
+            const allCompleted = Object.values(checkboxStates).every(Boolean);
+            acceptButton.disabled = !allCompleted;
+        }
+
+        // Initialize checkbox listeners
+        function initializeCheckboxes() {
+            const checkboxes = ['readTerms', 'readEula', 'agreeTerms', 'agreeEula', 'ageConfirmation', 'finalConfirmation'];
+            
+            checkboxes.forEach(id => {
+                const checkbox = document.getElementById(id);
+                checkbox.addEventListener('change', function() {
+                    checkboxStates[id] = this.checked;
+                    updateProgress();
+                });
+            });
+        }
+
+        // Monitor link clicks to track document reading
+        function monitorDocumentLinks() {
+            const termsLinks = document.querySelectorAll('a[href="/terms-of-use.html"]');
+            const eulaLinks = document.querySelectorAll('a[href="/eula.html"]');
+            
+            termsLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    setTimeout(() => {
+                        documentsRead.terms = true;
+                        updateDocumentStatus('terms');
+                    }, 2000); // Assume 2 seconds minimum reading time
+                });
+            });
+            
+            eulaLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    setTimeout(() => {
+                        documentsRead.eula = true;
+                        updateDocumentStatus('eula');
+                    }, 2000); // Assume 2 seconds minimum reading time
+                });
+            });
+        }
+
+        // Update document reading status
+        function updateDocumentStatus(type) {
+            const statusIndicator = document.getElementById(`${type}Status`);
+            const statusText = document.getElementById(`${type}StatusText`);
+            
+            if (documentsRead[type]) {
+                statusIndicator.classList.add('read');
+                statusText.textContent = 'Read';
+                statusText.style.color = 'var(--success-color)';
+            }
+        }
+
+        // Check for existing reading status from localStorage
+        function checkExistingReadingStatus() {
+            const termsRead = localStorage.getItem('engunity_terms_read');
+            const eulaRead = localStorage.getItem('engunity_eula_read');
+            
+            if (termsRead === 'true') {
+                documentsRead.terms = true;
+                updateDocumentStatus('terms');
+            }
+            
+            if (eulaRead === 'true') {
+                documentsRead.eula = true;
+                updateDocumentStatus('eula');
+            }
+        }
+
+        // Handle terms acceptance
+        function acceptTerms() {
+            // Store acceptance in localStorage
+            const acceptanceData = {
+                termsAccepted: true,
+                eulaAccepted: true,
+                acceptanceDate: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                ipAddress: 'logged-separately' // In production, log IP server-side
+            };
+            
+            localStorage.setItem('engunity_terms_accepted', JSON.stringify(acceptanceData));
+            
+            // Show confirmation modal
+            const modal = document.getElementById('confirmationModal');
+            modal.classList.add('active');
+        }
+
+        // Handle terms decline
+        function declineTerms() {
+            if (confirm('Are you sure you want to decline the terms? You will not be able to use Engunity AI without accepting them.')) {
+                // Clear any existing acceptance
+                localStorage.removeItem('engunity_terms_accepted');
+                
+                // Redirect to homepage or close window
+                window.location.href = '/';
+            }
+        }
+
+        // Redirect to login page
+        function redirectToLogin() {
+            window.location.href = '/login.html';
+        }
+
+        // Check if terms were already accepted
+        function checkExistingAcceptance() {
+            const acceptance = localStorage.getItem('engunity_terms_accepted');
+            if (acceptance) {
+                try {
+                    const acceptanceData = JSON.parse(acceptance);
+                    if (acceptanceData.termsAccepted && acceptanceData.eulaAccepted) {
+                        // Terms already accepted, redirect to login
+                        redirectToLogin();
+                        return;
+                    }
+                } catch (e) {
+                    // Invalid data, continue with normal flow
+                    localStorage.removeItem('engunity_terms_accepted');
+                }
+            }
+        }
+
+        // Add hover effects to document cards
+        function addCardAnimations() {
+            const cards = document.querySelectorAll('.document-card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-4px)';
+                    this.style.boxShadow = '0 10px 30px rgba(99, 102, 241, 0.2)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = 'none';
+                });
+            });
+        }
+
+        // Prevent back navigation
+        function preventBackNavigation() {
+            history.pushState(null, null, location.href);
+            window.addEventListener('popstate', function() {
+                history.pushState(null, null, location.href);
+            });
+        }
+
+        // Check reading status when page gains focus (user returns from document)
+        window.addEventListener('focus', function() {
+            checkExistingReadingStatus();
+        });
+
+        // Check reading status when page becomes visible (tab switching)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                checkExistingReadingStatus();
+            }
+        });
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', function() {
+            checkExistingAcceptance();
+            checkExistingReadingStatus(); // Check if documents were already read
+            initializeCheckboxes();
+            monitorDocumentLinks();
+            addCardAnimations();
+            preventBackNavigation();
+            updateProgress();
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('confirmationModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                redirectToLogin();
+            }
+        });
+
+        // Handle escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('confirmationModal');
+                if (modal.classList.contains('active')) {
+                    redirectToLogin();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

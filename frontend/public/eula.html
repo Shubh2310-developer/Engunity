@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End User License Agreement - Engunity AI</title>
+    <link rel="icon" href="/assets/images/logo/favicon.png">
+    
+    <!-- CSS Imports -->
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="/styles/themes/dark-theme.css">
+    <link rel="stylesheet" href="/styles/components/buttons.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-bg: #0a0a0f;
+            --secondary-bg: #1a1a2e;
+            --card-bg: rgba(26, 26, 46, 0.8);
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border-color: rgba(99, 102, 241, 0.2);
+            --shadow-primary: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 50px rgba(99, 102, 241, 0.1);
+            --warning-color: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .logo {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+
+        .last-updated {
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        .content {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: var(--shadow-primary), var(--shadow-glow);
+            margin-bottom: 32px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--accent-primary);
+            margin-bottom: 16px;
+            border-bottom: 2px solid rgba(99, 102, 241, 0.2);
+            padding-bottom: 8px;
+        }
+
+        .section-content {
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .section-content h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 12px 0;
+        }
+
+        .section-content p {
+            margin-bottom: 16px;
+        }
+
+        .section-content ul {
+            margin: 16px 0;
+            padding-left: 24px;
+        }
+
+        .section-content li {
+            margin-bottom: 8px;
+        }
+
+        .section-content strong {
+            color: var(--text-primary);
+        }
+
+        .highlight {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-primary);
+            margin: 16px 0;
+        }
+
+        .warning {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1));
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid var(--warning-color);
+            margin: 16px 0;
+        }
+
+        .warning strong {
+            color: var(--warning-color);
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-top: 32px;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .contact-info {
+            background: rgba(99, 102, 241, 0.05);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .contact-info strong {
+            color: var(--accent-primary);
+        }
+
+        .license-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            .content {
+                padding: 24px;
+            }
+            
+            .title {
+                font-size: 28px;
+            }
+            
+            .section-title {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-container"></div>
+    
+    <div class="container">
+        <div class="header">
+            <div class="logo"></div>
+            <h1 class="title">End User License Agreement</h1>
+            <p class="subtitle">Engunity AI Platform Software License</p>
+            <p class="last-updated">Last Updated: January 8, 2025</p>
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <h2 class="section-title">1. Grant of License</h2>
+                <div class="section-content">
+                    <p>Subject to the terms and conditions of this End User License Agreement ("EULA"), Engunity AI hereby grants you a limited, non-exclusive, non-transferable, revocable license to use the Engunity AI software platform ("Software") in accordance with the terms set forth herein.</p>
+                    
+                    <div class="highlight">
+                        <strong>License Scope:</strong> This license grants you the right to access and use the Software for your internal business, educational, or personal purposes only.
+                    </div>
+                    
+                    <h3>1.1 Permitted Uses</h3>
+                    <ul>
+                        <li>Access and use the Software through supported web browsers</li>
+                        <li>Create, edit, and manage content within the platform</li>
+                        <li>Collaborate with authorized team members</li>
+                        <li>Export your data in supported formats</li>
+                        <li>Integrate with approved third-party applications</li>
+                    </ul>
+                    
+                    <h3>1.2 License Limitations</h3>
+                    <p>This license does not grant you the right to:</p>
+                    <ul>
+                        <li>Modify, adapt, or create derivative works of the Software</li>
+                        <li>Reverse engineer, decompile, or disassemble the Software</li>
+                        <li>Distribute, sublicense, or transfer the Software to third parties</li>
+                        <li>Remove or alter any proprietary notices or labels</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">2. Software Ownership and Intellectual Property</h2>
+                <div class="section-content">
+                    <h3>2.1 Ownership</h3>
+                    <p>The Software, including all intellectual property rights therein, is and shall remain the exclusive property of Engunity AI and its licensors. This EULA does not transfer any ownership rights to you.</p>
+                    
+                    <h3>2.2 Proprietary Rights</h3>
+                    <p>The Software is protected by copyright, trademark, trade secret, and other intellectual property laws. You acknowledge that the Software contains valuable trade secrets and proprietary information.</p>
+                    
+                    <h3>2.3 Third-Party Components</h3>
+                    <p>The Software may include third-party open source components. Such components are subject to their respective licenses, which are incorporated herein by reference.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">3. Use Restrictions</h2>
+                <div class="section-content">
+                    <h3>3.1 Prohibited Activities</h3>
+                    <p>You agree not to use the Software for any of the following purposes:</p>
+                    <ul>
+                        <li>Any illegal or unauthorized purpose</li>
+                        <li>Violating any applicable laws or regulations</li>
+                        <li>Infringing upon the rights of others</li>
+                        <li>Transmitting malware, viruses, or harmful code</li>
+                        <li>Attempting to gain unauthorized access to systems or data</li>
+                        <li>Interfering with the proper functioning of the Software</li>
+                        <li>Copying, storing, or accessing content beyond permitted scope</li>
+                    </ul>
+                    
+                    <div class="warning">
+                        <strong>Security Warning:</strong> Any attempt to circumvent security measures, exploit vulnerabilities, or gain unauthorized access will result in immediate license termination and may subject you to legal action.
+                    </div>
+                    
+                    <h3>3.2 Usage Monitoring</h3>
+                    <p>We reserve the right to monitor usage of the Software to ensure compliance with this EULA and to protect our systems and other users.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">4. Data Rights and Privacy</h2>
+                <div class="section-content">
+                    <h3>4.1 Your Data</h3>
+                    <p>You retain all rights to data and content you input into the Software ("User Data"). You grant us a limited license to process User Data solely for the purpose of providing the Software services.</p>
+                    
+                    <h3>4.2 Data Processing</h3>
+                    <p>We process User Data in accordance with our Privacy Policy and applicable data protection laws. We implement appropriate technical and organizational measures to protect your data.</p>
+                    
+                    <h3>4.3 Data Portability</h3>
+                    <p>You may export your User Data from the Software at any time in machine-readable formats, subject to technical limitations and security requirements.</p>
+                    
+                    <h3>4.4 AI Training Data</h3>
+                    <p>Unless explicitly opted-in, your User Data will not be used to train our AI models. We maintain strict data isolation and privacy controls.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">5. Software Updates and Modifications</h2>
+                <div class="section-content">
+                    <h3>5.1 Updates</h3>
+                    <p>We may provide updates, patches, and new versions of the Software. You agree to accept and install such updates, which may be delivered automatically.</p>
+                    
+                    <h3>5.2 Feature Changes</h3>
+                    <p>We reserve the right to modify, add, or remove features of the Software at any time with reasonable notice to users.</p>
+                    
+                    <h3>5.3 Compatibility</h3>
+                    <p>Updates may require current versions of supported browsers and operating systems. We are not responsible for compatibility issues arising from outdated software.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">6. Disclaimer of Warranties</h2>
+                <div class="section-content">
+                    <div class="warning">
+                        <strong>Important:</strong> The Software is provided "AS IS" and "AS AVAILABLE" without warranties of any kind, either express or implied.
+                    </div>
+                    
+                    <h3>6.1 No Warranties</h3>
+                    <p>To the maximum extent permitted by law, we disclaim all warranties, including but not limited to:</p>
+                    <ul>
+                        <li>Warranties of merchantability and fitness for a particular purpose</li>
+                        <li>Warranties of non-infringement</li>
+                        <li>Warranties that the Software will be uninterrupted or error-free</li>
+                        <li>Warranties regarding the accuracy or reliability of results</li>
+                    </ul>
+                    
+                    <h3>6.2 AI-Generated Content</h3>
+                    <p>AI-generated content is provided for informational purposes only. We make no warranties about the accuracy, completeness, or reliability of such content.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">7. Limitation of Liability</h2>
+                <div class="section-content">
+                    <h3>7.1 Damages Limitation</h3>
+                    <p>In no event shall Engunity AI be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to:</p>
+                    <ul>
+                        <li>Loss of profits or business opportunities</li>
+                        <li>Loss of data or information</li>
+                        <li>Business interruption</li>
+                        <li>Loss of goodwill or reputation</li>
+                    </ul>
+                    
+                    <h3>7.2 Maximum Liability</h3>
+                    <p>Our total liability for any claim arising out of or relating to this EULA shall not exceed the amount paid by you for the Software during the twelve (12) months preceding the claim.</p>
+                    
+                    <h3>7.3 Essential Purpose</h3>
+                    <p>The limitations of liability set forth herein are fundamental elements of the basis of the bargain between you and Engunity AI.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">8. Indemnification</h2>
+                <div class="section-content">
+                    <p>You agree to indemnify, defend, and hold harmless Engunity AI, its affiliates, officers, directors, employees, and agents from any claims, damages, losses, costs, and expenses (including reasonable attorneys' fees) arising from:</p>
+                    <ul>
+                        <li>Your use of the Software</li>
+                        <li>Your violation of this EULA</li>
+                        <li>Your violation of any third-party rights</li>
+                        <li>Your User Data or content</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">9. Term and Termination</h2>
+                <div class="section-content">
+                    <h3>9.1 Term</h3>
+                    <p>This EULA is effective until terminated by either party in accordance with the terms herein.</p>
+                    
+                    <h3>9.2 Termination by You</h3>
+                    <p>You may terminate this EULA at any time by discontinuing use of the Software and deleting all copies in your possession.</p>
+                    
+                    <h3>9.3 Termination by Us</h3>
+                    <p>We may terminate this EULA immediately upon notice for:</p>
+                    <ul>
+                        <li>Breach of any terms of this EULA</li>
+                        <li>Violation of applicable laws or regulations</li>
+                        <li>Suspension or termination of your account</li>
+                        <li>Non-payment of applicable fees</li>
+                    </ul>
+                    
+                    <h3>9.4 Effect of Termination</h3>
+                    <p>Upon termination, your license to use the Software immediately ceases, and you must discontinue all use of the Software.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">10. Export Controls and Compliance</h2>
+                <div class="section-content">
+                    <h3>10.1 Export Regulations</h3>
+                    <p>The Software may be subject to U.S. export control laws and regulations. You agree to comply with all applicable export and import laws.</p>
+                    
+                    <h3>10.2 Restricted Countries</h3>
+                    <p>You may not use the Software if you are located in a country subject to U.S. government embargo or if you are on any U.S. government list of prohibited persons.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">11. Governing Law and Jurisdiction</h2>
+                <div class="section-content">
+                    <h3>11.1 Governing Law</h3>
+                    <p>This EULA shall be governed by and construed in accordance with the laws of [Your Jurisdiction], without regard to conflict of law principles.</p>
+                    
+                    <h3>11.2 Jurisdiction</h3>
+                    <p>Any legal action or proceeding arising under this EULA shall be brought exclusively in the courts of [Your Jurisdiction].</p>
+                    
+                    <h3>11.3 Arbitration</h3>
+                    <p>Any disputes arising from this EULA shall be resolved through binding arbitration in accordance with the rules of the American Arbitration Association.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">12. Miscellaneous</h2>
+                <div class="section-content">
+                    <h3>12.1 Entire Agreement</h3>
+                    <p>This EULA, together with our Terms of Use and Privacy Policy, constitutes the entire agreement between you and Engunity AI regarding the Software.</p>
+                    
+                    <h3>12.2 Severability</h3>
+                    <p>If any provision of this EULA is held to be invalid or unenforceable, the remaining provisions shall continue in full force and effect.</p>
+                    
+                    <h3>12.3 No Waiver</h3>
+                    <p>The failure of either party to enforce any provision of this EULA shall not constitute a waiver of that provision or any other provision.</p>
+                    
+                    <h3>12.4 Assignment</h3>
+                    <p>You may not assign or transfer this EULA without our prior written consent. We may assign this EULA without restriction.</p>
+                    
+                    <h3>12.5 Survival</h3>
+                    <p>Provisions that by their nature should survive termination shall survive, including ownership, warranty disclaimers, indemnity, and limitations of liability.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">13. Contact Information</h2>
+                <div class="section-content">
+                    <p>For questions about this EULA or to report violations, please contact us:</p>
+                    
+                    <div class="contact-info">
+                        <p><strong>Legal Department:</strong> legal@engunity.ai</p>
+                        <p><strong>Technical Support:</strong> support@engunity.ai</p>
+                        <p><strong>Address:</strong> [Your Company Address]</p>
+                        <p><strong>Phone:</strong> [Your Phone Number]</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">14. Acknowledgment</h2>
+                <div class="section-content">
+                    <div class="license-box">
+                        BY USING THE SOFTWARE, YOU ACKNOWLEDGE THAT YOU HAVE READ THIS EULA, UNDERSTAND IT, AND AGREE TO BE BOUND BY ITS TERMS AND CONDITIONS. THIS EULA IS A LEGAL AGREEMENT BETWEEN YOU AND ENGUNITY AI.
+                    </div>
+                    
+                    <p>If you do not agree to the terms of this EULA, you must not install, access, or use the Software.</p>
+                </div>
+            </div>
+        </div>
+
+        <a href="/terms-acceptance.html" class="back-button" onclick="markDocumentAsRead('eula')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5"/>
+                <path d="M12 19l-7-7 7-7"/>
+            </svg>
+            Back to Terms Acceptance
+        </a>
+    </div>
+
+    <script>
+        // Function to mark document as read when returning to terms acceptance
+        function markDocumentAsRead(docType) {
+            localStorage.setItem(`engunity_${docType}_read`, 'true');
+            localStorage.setItem(`engunity_${docType}_read_time`, new Date().toISOString());
+        }
+
+        // Auto-mark as read after user has been on page for sufficient time
+        let startTime = Date.now();
+        let hasScrolled = false;
+        let readTimeThreshold = 30000; // 30 seconds minimum
+
+        // Track scrolling to ensure user is actually reading
+        window.addEventListener('scroll', function() {
+            hasScrolled = true;
+        });
+
+        // Mark as read when user leaves page (if they've been here long enough and scrolled)
+        window.addEventListener('beforeunload', function() {
+            let timeOnPage = Date.now() - startTime;
+            if (timeOnPage >= readTimeThreshold && hasScrolled) {
+                markDocumentAsRead('eula');
+            }
+        });
+
+        // Also mark as read when clicking any internal links (showing engagement)
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A' && e.target.href && !e.target.href.includes('terms-acceptance.html')) {
+                let timeOnPage = Date.now() - startTime;
+                if (timeOnPage >= 10000) { // 10 seconds for clicking links
+                    markDocumentAsRead('eula');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

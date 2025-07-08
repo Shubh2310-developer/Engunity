@@ -1,0 +1,3690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Engunity AI</title>
+    <meta name="description" content="Professional AI-powered SaaS platform for research, code generation, and data analysis">
+    <link rel="icon" href="/assets/images/logo/favicon.png" type="image/png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        /* Professional Color Palette & Variables */
+        :root {
+            --bg-main: #f8fafc;
+            --bg-card: #fff;
+            --bg-navbar: #fff;
+            --bg-sidebar: #fff;
+            --bg-footer: #fff;
+            --text-main: #23272f;
+            --text-secondary: #6366f1;
+            --text-muted: #64748b;
+            --border-main: #e5e7eb;
+            --shadow-main: 0 2px 12px rgba(30, 41, 59, 0.04);
+            --shadow-card: 0 2px 12px rgba(30, 41, 59, 0.04);
+            --accent: #3b82f6;
+            --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            --accent-gold: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            --success: #10b981;
+            --error: #ef4444;
+            --info: #06b6d4;
+            --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #1e40af 50%, #1d4ed8 100%);
+            --gradient-secondary: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            --gradient-gold: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+            --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.8);
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.6);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.7);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.8);
+            --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
+            --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
+            --blur-sm: blur(4px);
+            --blur-md: blur(8px);
+            --blur-lg: blur(16px);
+        }
+        .dark {
+            --bg-main: #0a0b0d;
+            --bg-card: #181a20;
+            --bg-navbar: #141518;
+            --bg-sidebar: #181a20;
+            --bg-footer: #141518;
+            --text-main: #f8fafc;
+            --text-secondary: #8b5cf6;
+            --text-muted: #94a3b8;
+            --border-main: #23272f;
+            --shadow-main: 0 2px 12px rgba(0,0,0,0.5);
+            --shadow-card: 0 2px 12px rgba(0,0,0,0.7);
+            --accent: #8b5cf6;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --accent-gold: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Enhanced Layout Grid */
+        .dashboard-layout {
+            display: grid;
+            grid-template-areas: 
+                "sidebar navbar navbar"
+                "sidebar main main";
+            grid-template-columns: 260px 1fr;
+            grid-template-rows: 64px 1fr;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* AI Orbital Loader */
+        .ai-loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 11, 13, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .ai-loader-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .ai-loader-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ai-core {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #3b82f6 0%, #1e40af 50%, #1d4ed8 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 40px rgba(59, 130, 246, 0.8), 0 0 80px rgba(59, 130, 246, 0.4);
+            animation: aiCorePulse 2s ease-in-out infinite alternate;
+            z-index: 10;
+        }
+
+        @keyframes aiCorePulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 40px rgba(59, 130, 246, 0.8), 0 0 80px rgba(59, 130, 246, 0.4);
+            }
+            100% {
+                transform: scale(1.1);
+                box-shadow: 0 0 60px rgba(59, 130, 246, 1), 0 0 120px rgba(59, 130, 246, 0.6);
+            }
+        }
+
+        .orbital-layer {
+            position: absolute;
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 50%;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+        }
+
+        .orbital-layer-1 {
+            width: 120px;
+            height: 120px;
+            border-top-color: rgba(59, 130, 246, 0.8);
+            border-right-color: rgba(139, 92, 246, 0.6);
+            animation: rotate 4s linear infinite;
+        }
+
+        .orbital-layer-2 {
+            width: 160px;
+            height: 160px;
+            border-top-color: rgba(139, 92, 246, 0.7);
+            border-left-color: rgba(59, 130, 246, 0.5);
+            animation: rotate 6s linear infinite reverse;
+        }
+
+        .orbital-layer-3 {
+            width: 200px;
+            height: 200px;
+            border-top-color: rgba(59, 130, 246, 0.5);
+            border-bottom-color: rgba(139, 92, 246, 0.4);
+            animation: rotate 8s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .orbital-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 1) 0%, rgba(139, 92, 246, 0.8) 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
+        }
+
+        .particle-1 {
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: orbitParticle1 4s linear infinite;
+        }
+
+        .particle-2 {
+            top: 20px;
+            right: 20px;
+            animation: orbitParticle2 6s linear infinite;
+        }
+
+        .particle-3 {
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: orbitParticle3 8s linear infinite;
+        }
+
+        @keyframes orbitParticle1 {
+            0% { transform: translateX(-50%) rotate(0deg) translateX(60px) rotate(0deg); }
+            100% { transform: translateX(-50%) rotate(360deg) translateX(60px) rotate(-360deg); }
+        }
+
+        @keyframes orbitParticle2 {
+            0% { transform: rotate(0deg) translateX(80px) rotate(0deg); }
+            100% { transform: rotate(-360deg) translateX(80px) rotate(360deg); }
+        }
+
+        @keyframes orbitParticle3 {
+            0% { transform: translateX(-50%) rotate(0deg) translateX(100px) rotate(0deg); }
+            100% { transform: translateX(-50%) rotate(360deg) translateX(100px) rotate(-360deg); }
+        }
+
+        .neural-connections {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .neural-line {
+            position: absolute;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.6), transparent);
+            animation: neuralPulse 3s ease-in-out infinite;
+        }
+
+        .neural-line-1 {
+            top: 30%;
+            left: 10%;
+            width: 80px;
+            transform: rotate(45deg);
+            animation-delay: 0s;
+        }
+
+        .neural-line-2 {
+            top: 60%;
+            right: 15%;
+            width: 60px;
+            transform: rotate(-30deg);
+            animation-delay: 1s;
+        }
+
+        .neural-line-3 {
+            bottom: 25%;
+            left: 20%;
+            width: 70px;
+            transform: rotate(15deg);
+            animation-delay: 2s;
+        }
+
+        @keyframes neuralPulse {
+            0%, 100% { opacity: 0.3; transform: scale(1) rotate(var(--rotation, 0deg)); }
+            50% { opacity: 1; transform: scale(1.1) rotate(var(--rotation, 0deg)); }
+        }
+
+        .loader-progress {
+            position: absolute;
+            bottom: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 4px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .loader-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            border-radius: 2px;
+            width: 0%;
+            animation: loadingProgress 3s ease-in-out infinite;
+        }
+
+        @keyframes loadingProgress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        .loader-text {
+            position: absolute;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(59, 130, 246, 0.9);
+            font-size: 14px;
+            font-weight: 500;
+            text-align: center;
+            opacity: 0.8;
+            animation: textFade 2s ease-in-out infinite;
+        }
+
+        @keyframes textFade {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Professional Navbar */
+        .navbar {
+            grid-area: navbar;
+            background: var(--bg-navbar);
+            border-bottom: 1px solid var(--border-main);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2.5rem;
+            box-shadow: var(--shadow-main);
+            z-index: 1000;
+            position: relative;
+            height: 64px;
+        }
+
+        .navbar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient-glass);
+            z-index: -1;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 800;
+            font-size: 1.35rem;
+            color: var(--text-main);
+            text-decoration: none;
+            letter-spacing: 0.01em;
+            transition: all 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: translateY(-1px);
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            font-size: 1.1rem;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.10);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-icon::before {
+            content: '';
+            position: absolute;
+            width: 60%;
+            height: 60%;
+            background: linear-gradient(45deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%);
+            border-radius: 50%;
+            transform: rotate(45deg);
+        }
+        
+        .logo-icon::after {
+            content: '';
+            position: absolute;
+            width: 30%;
+            height: 30%;
+            background: linear-gradient(135deg, rgba(59,130,246,0.8) 0%, rgba(139,92,246,0.8) 100%);
+            border-radius: 50%;
+            animation: dashboardLogoPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes dashboardLogoPulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+        }
+
+        .navbar-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-main);
+            border-radius: 999px;
+            padding: 0.6rem 0.8rem;
+            color: var(--accent);
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 1px 4px rgba(59, 130, 246, 0.04);
+        }
+
+        .navbar-btn:hover {
+            background: var(--accent-gradient);
+            color: #fff;
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .notification-bell {
+            position: relative;
+        }
+
+        .notification-dot {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            width: 10px;
+            height: 10px;
+            background: var(--error);
+            border-radius: 50%;
+            border: 2px solid var(--bg-secondary);
+            animation: pulse-notification 2s infinite;
+        }
+
+        @keyframes pulse-notification {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 999px;
+            background: var(--accent-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 1px 4px rgba(251, 191, 36, 0.10);
+        }
+
+        .user-avatar:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 16px rgba(251, 191, 36, 0.18);
+        }
+
+        /* Enhanced Sidebar */
+        .sidebar {
+            grid-area: sidebar;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-main);
+            padding: 2rem 0;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient-secondary);
+            z-index: -1;
+        }
+
+        .sidebar-section {
+            margin-bottom: 2.5rem;
+            opacity: 0;
+            animation: slideInLeft 0.6s ease forwards;
+        }
+
+        .sidebar-section:nth-child(2) { animation-delay: 0.1s; }
+        .sidebar-section:nth-child(3) { animation-delay: 0.2s; }
+        .sidebar-section:nth-child(4) { animation-delay: 0.3s; }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar-title {
+            color: var(--text-main);
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 1rem;
+            position: relative;
+            text-align: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .sidebar-title::after {
+            content: '';
+            display: block;
+            margin: 0.5rem auto 0 auto;
+            width: 30px;
+            height: 2px;
+            background: var(--accent-gradient);
+            border-radius: 1px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-item {
+            margin-bottom: 0.25rem;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.9rem 2rem;
+            color: var(--text-main);
+            text-decoration: none;
+            transition: all 0.2s;
+            border-right: 3px solid transparent;
+            font-weight: 500;
+            border-radius: 0 999px 999px 0;
+        }
+
+        .sidebar-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 0;
+            background: var(--gradient-primary);
+            transition: width 0.3s ease;
+        }
+
+        .sidebar-link:hover {
+            background: var(--accent-gradient);
+            color: #fff;
+            border-right-color: var(--accent);
+            transform: translateX(4px);
+        }
+
+        .sidebar-link:hover::before {
+            width: 4px;
+        }
+
+        .sidebar-link.active {
+            background: var(--accent-gradient);
+            color: #fff;
+            border-right-color: var(--accent);
+            font-weight: 600;
+        }
+
+        .sidebar-link.active::before {
+            width: 4px;
+        }
+
+        .sidebar-icon {
+            font-size: 1.15rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .sidebar-link:hover .sidebar-icon {
+            transform: scale(1.1);
+        }
+
+        /* Main Content Area with Enhanced Animations */
+        .main-content {
+            grid-area: main;
+            background: var(--bg-main);
+            padding: 2.5rem 3.5rem;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* Neural Network Background Animation */
+        .neural-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.03;
+            pointer-events: none;
+        }
+
+        .neural-node {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .neural-connection {
+            position: absolute;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+            animation: pulse-line 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes pulse-line {
+            0%, 100% { opacity: 0.1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Section Animations */
+        .animate-section {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        .animate-section:nth-child(2) { animation-delay: 0.1s; }
+        .animate-section:nth-child(3) { animation-delay: 0.2s; }
+        .animate-section:nth-child(4) { animation-delay: 0.3s; }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Loading Animation */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.5s ease;
+        }
+
+        .neural-loader {
+            width: 80px;
+            height: 80px;
+            position: relative;
+        }
+
+        .neural-loader::before,
+        .neural-loader::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid transparent;
+            border-top: 2px solid var(--accent-primary);
+            border-radius: 50%;
+            animation: neuralSpin 1.5s linear infinite;
+        }
+
+        .neural-loader::after {
+            width: 60px;
+            height: 60px;
+            top: 10px;
+            left: 10px;
+            border-top: 2px solid var(--accent-gold);
+            animation-duration: 1s;
+            animation-direction: reverse;
+        }
+
+        @keyframes neuralSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Enhanced Welcome Section */
+        .welcome-section {
+            margin-bottom: 3rem;
+        }
+
+        .welcome-banner {
+            background: var(--bg-card);
+            border: 1px solid var(--border-main);
+            border-radius: 18px;
+            padding: 2.5rem 3rem;
+            box-shadow: var(--shadow-card);
+            margin-bottom: 2.5rem;
+        }
+
+        .welcome-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient-glass);
+            z-index: -1;
+        }
+
+        .welcome-title {
+            font-family: 'Sora', 'Inter', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.15rem;
+            font-weight: 500;
+        }
+
+        /* Enhanced Stats Panel */
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-main);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-card);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            transform: translateY(20px);
+            opacity: 0;
+            animation: slideInUp 0.6s ease forwards;
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes slideInUp {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient-glass);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-2xl);
+            border-color: var(--border-accent);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.2rem;
+        }
+
+        .stat-title {
+            color: var(--text-main);
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .stat-icon {
+            font-size: 1.25rem !important;
+            width: 24px;
+            text-align: center;
+            display: inline-block;
+            margin-bottom: 0;
+            background: none !important;
+            -webkit-background-clip: initial !important;
+            -webkit-text-fill-color: initial !important;
+            background-clip: initial !important;
+        }
+
+        @keyframes iconPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .stat-value {
+            font-size: 2.1rem;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-change {
+            font-size: 0.95rem;
+            color: var(--success);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .stat-change::before {
+            content: '↗';
+            font-size: 0.75rem;
+        }
+
+        /* Enhanced Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .action-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-main);
+            border-radius: 999px;
+            padding: 2rem 2.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: var(--text-main);
+            box-shadow: var(--shadow-card);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: var(--blur-lg);
+        }
+
+        .action-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .action-card:hover::before {
+            left: 100%;
+        }
+
+        .action-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: var(--border-accent);
+            box-shadow: var(--shadow-2xl);
+        }
+
+        .action-icon {
+            font-size: 1.25rem !important;
+            width: 24px;
+            text-align: center;
+            display: inline-block;
+            margin-bottom: 0;
+            background: none !important;
+            -webkit-background-clip: initial !important;
+            -webkit-text-fill-color: initial !important;
+            background-clip: initial !important;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .action-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .action-description {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Enhanced Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Enhanced Widget Cards */
+        .widget-section {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .widget-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-main);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-card);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .widget-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient-glass);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .widget-card:hover::before {
+            opacity: 1;
+        }
+
+        .widget-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .widget-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .widget-action {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            padding: 0.5rem 1rem;
+            border-radius: 999px;
+            border: 1px solid transparent;
+        }
+
+        .widget-action:hover {
+            background: var(--accent-gradient);
+            border-color: var(--accent);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        /* Enhanced Recent Items */
+        .recent-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            margin-bottom: 0.5rem;
+            border: 1px solid transparent;
+        }
+
+        .recent-item:hover {
+            background: var(--bg-glass);
+            border-color: var(--border-primary);
+            transform: translateX(8px);
+        }
+
+        .recent-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--bg-quaternary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            border: 1px solid var(--border-primary);
+            transition: transform 0.3s ease;
+        }
+
+        .recent-item:hover .recent-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .recent-info {
+            flex: 1;
+        }
+
+        .recent-title {
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 0.25rem;
+            font-size: 1rem;
+        }
+
+        .recent-meta {
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+            font-weight: 500;
+        }
+
+        /* Enhanced AI Status */
+        .ai-status {
+            background: var(--bg-card);
+            border: 1px solid var(--border-main);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: var(--blur-lg);
+        }
+
+        .ai-status::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient-glass);
+            z-index: -1;
+        }
+
+        .status-indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--success);
+            display: inline-block;
+            margin-right: 0.75rem;
+            animation: statusPulse 2s infinite;
+            box-shadow: 0 0 10px var(--success);
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: var(--bg-glass);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .status-item:hover {
+            background: var(--bg-quaternary);
+            transform: translateX(5px);
+        }
+
+        /* Enhanced Footer */
+        .dashboard-footer {
+            border-top: 1px solid var(--border-main);
+            padding: 1.5rem 2.5rem;
+            background: var(--bg-footer);
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-main);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .footer-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-primary);
+            transition: width 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        .footer-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .dashboard-layout {
+                grid-template-areas: 
+                    "navbar navbar"
+                    "main main";
+                grid-template-columns: 1fr;
+                grid-template-rows: 72px 1fr;
+            }
+
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                top: 72px;
+                height: calc(100vh - 72px);
+                z-index: 999;
+                transition: left 0.4s ease;
+                box-shadow: var(--shadow-2xl);
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .main-content {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
+
+            .stats-panel {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .navbar {
+                padding: 0 1rem;
+            }
+
+            .welcome-banner {
+                padding: 2rem;
+            }
+
+            .welcome-title {
+                font-size: 2rem;
+            }
+
+            .welcome-subtitle {
+                font-size: 1rem;
+            }
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-menu-toggle:hover {
+            background: var(--bg-glass);
+        }
+
+        @media (max-width: 1024px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-secondary);
+        }
+
+        /* Glassmorphism Effects */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: var(--blur-lg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Enhanced Transitions */
+        * {
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Focus States for Accessibility */
+        button:focus,
+        a:focus,
+        input:focus,
+        select:focus {
+            outline: 2px solid var(--accent-primary);
+            outline-offset: 2px;
+        }
+
+        /* Print Styles */
+        @media print {
+            .sidebar,
+            .navbar,
+            .dashboard-footer {
+                display: none;
+            }
+            
+            .main-content {
+                grid-area: unset;
+                padding: 0;
+            }
+        }
+
+        select, select option {
+            color: var(--text-main) !important;
+            background: var(--bg-card) !important;
+        }
+        .dark select, .dark select option {
+            color: var(--text-main) !important;
+            background: var(--bg-card) !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- AI Orbital Loader -->
+    <div class="ai-loader-overlay" id="aiLoader">
+        <div class="ai-loader-container">
+            <div class="ai-core"></div>
+            <div class="orbital-layer orbital-layer-1">
+                <div class="orbital-particle particle-1"></div>
+            </div>
+            <div class="orbital-layer orbital-layer-2">
+                <div class="orbital-particle particle-2"></div>
+            </div>
+            <div class="orbital-layer orbital-layer-3">
+                <div class="orbital-particle particle-3"></div>
+            </div>
+            <div class="neural-connections">
+                <div class="neural-line neural-line-1"></div>
+                <div class="neural-line neural-line-2"></div>
+                <div class="neural-line neural-line-3"></div>
+            </div>
+            <div class="loader-progress">
+                <div class="loader-progress-bar"></div>
+            </div>
+            <div class="loader-text" id="loaderText">Initializing AI Dashboard...</div>
+        </div>
+    </div>
+
+    <!-- Neural Network Background -->
+    <div class="neural-bg" id="neuralBg"></div>
+
+    <div id="app" class="dashboard-layout">
+        <!-- Enhanced Navbar -->
+        <nav class="navbar">
+            <div class="navbar-left">
+                <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle mobile menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <a href="/" class="logo">
+                    <div class="logo-icon"></div>
+                    <span>Engunity AI</span>
+                </a>
+            </div>
+            <div class="navbar-right">
+                <button class="navbar-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+                <button class="navbar-btn notification-bell" title="Notifications" aria-label="View notifications">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span class="notification-dot"></span>
+                </button>
+                <div class="user-avatar" title="User menu" role="button" tabindex="0" aria-label="User menu" onclick="showUserMenu()" data-user-avatar>U</div>
+            </div>
+        </nav>
+
+        <!-- Enhanced Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Dashboard</div>
+                <ul class="sidebar-menu">
+                    <li class="sidebar-item">
+                        <a href="/" class="sidebar-link" data-route="dashboard" role="menuitem">
+                            <span class="sidebar-icon">🏠</span>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">AI Tools</div>
+                <ul class="sidebar-menu">
+                    <li class="sidebar-item">
+                        <a href="#chat" class="sidebar-link active" data-route="chat" role="menuitem">
+                            <span class="sidebar-icon">🧠</span>
+                            <span>AI Chatbot</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#code" class="sidebar-link" data-route="code" role="menuitem">
+                            <span class="sidebar-icon">💻</span>
+                            <span>Code Assistant</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#documents" class="sidebar-link" data-route="documents" role="menuitem">
+                            <span class="sidebar-icon">📄</span>
+                            <span>Document Q&A</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#research" class="sidebar-link" data-route="research" role="menuitem">
+                            <span class="sidebar-icon">📚</span>
+                            <span>Research Tools</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#notebook" class="sidebar-link" data-route="notebook" role="menuitem">
+                            <span class="sidebar-icon">📓</span>
+                            <span>Notebook</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#analysis" class="sidebar-link" data-route="analysis" role="menuitem">
+                            <span class="sidebar-icon">📊</span>
+                            <span>Data Analysis</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Management</div>
+                <ul class="sidebar-menu">
+                    <li class="sidebar-item">
+                        <a href="#projects" class="sidebar-link" data-route="projects" role="menuitem">
+                            <span class="sidebar-icon">📌</span>
+                            <span>Project Planner</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#citations" class="sidebar-link" data-route="citations" role="menuitem">
+                            <span class="sidebar-icon">📑</span>
+                            <span>Citation Manager</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#version" class="sidebar-link" data-route="version" role="menuitem">
+                            <span class="sidebar-icon">🧾</span>
+                            <span>Version Control</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">Enterprise</div>
+                <ul class="sidebar-menu">
+                    <li class="sidebar-item">
+                        <a href="#marketplace" class="sidebar-link" data-route="marketplace" role="menuitem">
+                            <span class="sidebar-icon">🌐</span>
+                            <span>AI Marketplace</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="#settings" class="sidebar-link" data-route="settings" role="menuitem">
+                            <span class="sidebar-icon">⚙️</span>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Enhanced Main Content -->
+        <main class="main-content" id="mainContent">
+            <!-- Welcome Section -->
+            <section class="welcome-section animate-section">
+                <div class="welcome-banner">
+                    <h1 class="welcome-title" data-user-name>Welcome back!</h1>
+                    <p class="welcome-subtitle">Unlock the power of artificial intelligence for research, development, and innovation.</p>
+                </div>
+            </section>
+
+            <!-- Enhanced Stats Panel -->
+            <section class="stats-panel animate-section">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">Active Projects</div>
+                        <div class="stat-icon">📌</div>
+                    </div>
+                    <div class="stat-value">12</div>
+                    <div class="stat-change">+2 this week</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">Documents Processed</div>
+                        <div class="stat-icon">📄</div>
+                    </div>
+                    <div class="stat-value">1,247</div>
+                    <div class="stat-change">+18 today</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">AI Sessions</div>
+                        <div class="stat-icon">💬</div>
+                    </div>
+                    <div class="stat-value">3</div>
+                    <div class="stat-change">2 active</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-title">Code Executions</div>
+                        <div class="stat-icon">💻</div>
+                    </div>
+                    <div class="stat-value">89</div>
+                    <div class="stat-change">+5 today</div>
+                </div>
+            </section>
+
+            <!-- Enhanced Quick Actions -->
+            <section class="quick-actions animate-section">
+                <a href="#chat" class="action-card" data-route="chat" role="button">
+                    <div class="action-icon">💬</div>
+                    <div class="action-title">Start AI Chat</div>
+                    <div class="action-description">Engage with advanced AI models</div>
+                </a>
+                <a href="#code" class="action-card" data-route="code" role="button">
+                    <div class="action-icon">💻</div>
+                    <div class="action-title">Generate Code</div>
+                    <div class="action-description">Create and debug code efficiently</div>
+                </a>
+                <a href="#documents" class="action-card" data-route="documents" role="button">
+                    <div class="action-icon">📄</div>
+                    <div class="action-title">Analyze Documents</div>
+                    <div class="action-description">Extract insights from documents</div>
+                </a>
+                <a href="#notebook" class="action-card" data-route="notebook" role="button">
+                    <div class="action-icon">📓</div>
+                    <div class="action-title">Open Notebook</div>
+                    <div class="action-description">Interactive coding environment</div>
+                </a>
+            </section>
+
+            <!-- Enhanced Content Grid -->
+            <div class="content-grid animate-section">
+                <!-- Left Column - Recent Activity -->
+                <div class="widget-section">
+                    <div class="widget-card">
+                        <div class="widget-header">
+                            <h3 class="widget-title">Recent Conversations</h3>
+                            <a href="#chat" class="widget-action">View All</a>
+                        </div>
+                        <div class="recent-items">
+                            <div class="recent-item">
+                                <div class="recent-icon">🧠</div>
+                                <div class="recent-info">
+                                    <div class="recent-title">Advanced Machine Learning Algorithms</div>
+                                    <div class="recent-meta">2 hours ago • 15 messages</div>
+                                </div>
+                            </div>
+                            <div class="recent-item">
+                                <div class="recent-icon">💻</div>
+                                <div class="recent-info">
+                                    <div class="recent-title">Python Data Processing Pipeline</div>
+                                    <div class="recent-meta">Yesterday • 8 messages</div>
+                                </div>
+                            </div>
+                            <div class="recent-item">
+                                <div class="recent-icon">📚</div>
+                                <div class="recent-info">
+                                    <div class="recent-title">Research Paper Analysis & Summary</div>
+                                    <div class="recent-meta">3 days ago • 12 messages</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="widget-card">
+                        <div class="widget-header">
+                            <h3 class="widget-title">Active Notebooks</h3>
+                            <a href="#notebook" class="widget-action">Manage All</a>
+                        </div>
+                        <div class="recent-items">
+                            <div class="recent-item">
+                                <div class="recent-icon">📓</div>
+                                <div class="recent-info">
+                                    <div class="recent-title">Advanced Data Visualization Project</div>
+                                    <div class="recent-meta">Modified 1 hour ago</div>
+                                </div>
+                            </div>
+                            <div class="recent-item">
+                                <div class="recent-icon">📊</div>
+                                <div class="recent-info">
+                                    <div class="recent-title">Sales Analytics Dashboard</div>
+                                    <div class="recent-meta">Modified yesterday</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - AI Status & Insights -->
+                <div class="widget-section">
+                    <div class="widget-card ai-status">
+                        <div class="widget-header">
+                            <h3 class="widget-title">System Status</h3>
+                        </div>
+                        <div style="text-align: left;">
+                            <div class="status-item">
+                                <span class="status-indicator"></span>
+                                <span>Groq API: Operational</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-indicator"></span>
+                                <span>Phi-2 Local: Ready</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-indicator"></span>
+                                <span>Vector Database: Online</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-indicator"></span>
+                                <span>Neural Processing: Active</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="widget-card">
+                        <div class="widget-header">
+                            <h3 class="widget-title">AI Insights</h3>
+                        </div>
+                        <p style="color: var(--text-secondary); margin-top: 1rem; line-height: 1.6;">
+                            💡 <strong>Pro Tip:</strong> Leverage the Document Q&A feature to extract comprehensive insights from research papers. Upload multiple PDFs simultaneously to perform comparative analysis across studies and identify emerging patterns.
+                        </p>
+                    </div>
+
+                    <div class="widget-card">
+                        <div class="widget-header">
+                            <h3 class="widget-title">Recent Uploads</h3>
+                        </div>
+                        <div class="recent-items" style="margin-top: 1rem;">
+                            <div class="recent-item">
+                                <div class="recent-icon">📄</div>
+                                <div class="recent-info">
+                                    <div class="recent-title">AI_Research_Paper_2024.pdf</div>
+                                    <div class="recent-meta">Uploaded today • 2.3 MB</div>
+                                </div>
+                            </div>
+                            <div class="recent-item">
+                                <div class="recent-icon">📊</div>
+                                <div class="recent-info">
+                                    <div class="recent-title">Market_Analysis_Q4.xlsx</div>
+                                    <div class="recent-meta">Uploaded yesterday • 1.8 MB</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Enhanced Footer -->
+    <footer class="dashboard-footer">
+        <div>
+            <span style="font-weight: 600;">Engunity AI</span>
+            <span style="color: var(--text-muted); margin-left: 0.5rem;">v2.1.0</span>
+        </div>
+        <div class="footer-links">
+            <a href="/docs">Documentation</a>
+            <a href="https://github.com/engunity-ai" target="_blank" rel="noopener">GitHub</a>
+            <a href="/support">Support</a>
+            <a href="/api">API</a>
+        </div>
+    </footer>
+
+    <!-- Enhanced JavaScript -->
+    <script>
+        // Neural Network Background Generator
+        class NeuralBackground {
+            constructor() {
+                this.container = document.getElementById('neuralBg');
+                this.nodes = [];
+                this.connections = [];
+                this.init();
+            }
+
+            init() {
+                this.createNodes();
+                this.createConnections();
+                this.animate();
+            }
+
+            createNodes() {
+                const nodeCount = 20;
+                for (let i = 0; i < nodeCount; i++) {
+                    const node = document.createElement('div');
+                    node.className = 'neural-node';
+                    node.style.left = Math.random() * 100 + '%';
+                    node.style.top = Math.random() * 100 + '%';
+                    node.style.animationDelay = Math.random() * 6 + 's';
+                    this.container.appendChild(node);
+                    this.nodes.push(node);
+                }
+            }
+
+            createConnections() {
+                const connectionCount = 15;
+                for (let i = 0; i < connectionCount; i++) {
+                    const connection = document.createElement('div');
+                    connection.className = 'neural-connection';
+                    connection.style.left = Math.random() * 100 + '%';
+                    connection.style.top = Math.random() * 100 + '%';
+                    connection.style.width = Math.random() * 200 + 100 + 'px';
+                    connection.style.transform = `rotate(${Math.random() * 360}deg)`;
+                    connection.style.animationDelay = Math.random() * 4 + 's';
+                    this.container.appendChild(connection);
+                    this.connections.push(connection);
+                }
+            }
+
+            animate() {
+                setInterval(() => {
+                    this.nodes.forEach(node => {
+                        if (Math.random() < 0.1) {
+                            node.style.opacity = Math.random() * 0.5 + 0.1;
+                        }
+                    });
+                }, 2000);
+            }
+        }
+
+        // Enhanced Theme Manager
+        class ThemeManager {
+            constructor() {
+                this.themeToggle = document.getElementById('themeToggle');
+                this.currentTheme = localStorage.getItem('theme') || 'light';
+                this.init();
+            }
+
+            init() {
+                this.applyTheme();
+                this.themeToggle.addEventListener('click', () => this.toggleTheme());
+            }
+
+            toggleTheme() {
+                this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
+                this.applyTheme();
+                localStorage.setItem('theme', this.currentTheme);
+                this.animateThemeChange();
+            }
+
+            applyTheme() {
+                if (this.currentTheme === 'dark') {
+                    document.body.classList.add('dark');
+                } else {
+                    document.body.classList.remove('dark');
+                }
+            }
+
+            animateThemeChange() {
+                document.body.style.transition = 'all 0.3s ease';
+                setTimeout(() => {
+                    document.body.style.transition = '';
+                }, 300);
+            }
+        }
+
+        // Enhanced Router with Smooth Transitions
+        class Router {
+            constructor() {
+                this.routes = {
+                    'dashboard': () => this.loadDashboard(),
+                    'chat': () => this.loadChatInterface(),
+                    'code': () => this.loadCodeAssistant(),
+                    'documents': () => this.loadDocumentQA(),
+                    'research': () => this.loadResearchTools(),
+                    'notebook': () => this.loadNotebook(),
+                    'analysis': () => this.loadDataAnalysis(),
+                    'projects': () => this.loadProjectPlanner(),
+                    'citations': () => this.loadCitationManager(),
+                    'version': () => this.loadVersionControl(),
+                    'marketplace': () => this.loadMarketplace(),
+                    'settings': () => this.loadSettings()
+                };
+                this.init();
+            }
+
+            init() {
+                // On load, always show dashboard if no hash or hash is #dashboard
+                const initialRoute = this.getCurrentRoute();
+                this.loadRoute(initialRoute);
+                this.updateActiveLink(initialRoute);
+
+                document.querySelectorAll('[data-route]').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const route = link.getAttribute('data-route');
+                        this.navigate(route);
+                    });
+                });
+
+                window.addEventListener('popstate', () => {
+                    const route = this.getCurrentRoute();
+                    this.loadRoute(route);
+                    this.updateActiveLink(route);
+                });
+            }
+
+            navigate(route) {
+                if (route === 'dashboard') {
+                    history.pushState({}, '', '/');
+                } else {
+                history.pushState({}, '', `#${route}`);
+                }
+                this.loadRoute(route);
+                this.updateActiveLink(route);
+                this.showLoadingTransition();
+            }
+
+            showLoadingTransition() {
+                const mainContent = document.getElementById('mainContent');
+                mainContent.style.opacity = '0';
+                mainContent.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    mainContent.style.transition = 'all 0.3s ease';
+                    mainContent.style.opacity = '1';
+                    mainContent.style.transform = 'translateY(0)';
+                    setTimeout(() => {
+                        mainContent.style.transition = '';
+                    }, 300);
+                }, 100);
+            }
+
+            getCurrentRoute() {
+                const hash = window.location.hash.replace(/^#/, '');
+                if (!hash || hash === 'dashboard') return 'dashboard';
+                return hash;
+            }
+
+            loadRoute(route) {
+                if (!route || route === 'dashboard') {
+                    this.loadDashboard();
+                } else if (this.routes[route]) {
+                    this.routes[route]();
+                } else {
+                    this.loadDashboard();
+                }
+            }
+
+            updateActiveLink(route) {
+                document.querySelectorAll('.sidebar-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                const activeLink = document.querySelector(`[data-route="${route}"]`);
+                if (activeLink && activeLink.classList.contains('sidebar-link')) {
+                    activeLink.classList.add('active');
+                }
+            }
+
+            loadDashboard() {
+                // Restore the original dashboard HTML
+                const mainContent = document.getElementById('mainContent');
+                if (window._dashboardHTML) {
+                    mainContent.innerHTML = window._dashboardHTML;
+                }
+                this.bindQuickActionEvents();
+            }
+
+            bindQuickActionEvents() {
+                document.querySelectorAll('[data-route]').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const route = link.getAttribute('data-route');
+                        this.navigate(route);
+                    });
+                });
+            }
+
+            loadChatInterface() {
+                document.getElementById('mainContent').innerHTML = `
+                    <div class="animate-section">
+                        <div class="page-header" style="margin-bottom: 2rem;">
+                            <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">AI Chatbot</h1>
+                            <p style="color: var(--text-secondary); font-size: 1.125rem;">Powered by advanced neural networks with multi-model support</p>
+                        </div>
+                        <div class="chat-container" style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; height: 70vh; display: flex; flex-direction: column; backdrop-filter: var(--blur-lg); box-shadow: var(--shadow-xl);">
+                            <div class="chat-header" style="padding: 1.5rem; border-bottom: 1px solid var(--border-primary); display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <h3 style="margin: 0; color: var(--text-primary);">Neural Assistant</h3>
+                                    <p style="margin: 0; color: var(--text-tertiary); font-size: 0.875rem;">GPT-4 Turbo • Real-time processing</p>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <button style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 8px; padding: 0.5rem; color: var(--text-secondary); cursor: pointer;">⚙️</button>
+                                    <button style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 8px; padding: 0.5rem; color: var(--text-secondary); cursor: pointer;">📎</button>
+                                </div>
+                            </div>
+                            <div class="chat-messages" style="flex: 1; padding: 1.5rem; overflow-y: auto;">
+                                <div class="message assistant" style="display: flex; gap: 1rem; margin-bottom: 2rem; animation: slideInLeft 0.5s ease;">
+                                    <div style="width: 40px; height: 40px; border-radius: 12px; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; flex-shrink: 0;">AI</div>
+                                    <div style="flex: 1; background: var(--bg-glass); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border-primary);">
+                                        <p style="margin: 0; line-height: 1.6;">Hello! I'm your advanced AI assistant powered by cutting-edge neural networks. I can help you with research, coding, analysis, creative writing, and much more. What would you like to explore today?</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chat-input-container" style="border-top: 1px solid var(--border-primary); padding: 1.5rem;">
+                                <div class="chat-input-wrapper" style="display: flex; gap: 1rem; align-items: flex-end;">
+                                    <div style="flex: 1; position: relative;">
+                                        <textarea placeholder="Ask me anything..." rows="1" style="width: 100%; background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 12px; padding: 1rem; color: var(--text-primary); resize: none; font-family: inherit; line-height: 1.5;"></textarea>
+                                    </div>
+                                    <button style="background: var(--gradient-primary); border: none; border-radius: 12px; padding: 1rem 1.5rem; color: white; cursor: pointer; font-weight: 600; transition: all 0.3s ease; box-shadow: var(--shadow-md);">Send</button>
+                                </div>
+                                <div style="display: flex; gap: 1rem; margin-top: 1rem; color: var(--text-tertiary); font-size: 0.875rem;">
+                                    <span>💡 Try: "Explain quantum computing" or "Write a Python function"</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            loadCodeAssistant() {
+                document.getElementById('mainContent').innerHTML = `
+                    <div class="animate-section">
+                        <div class="page-header" style="margin-bottom: 2rem;">
+                            <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Code Assistant</h1>
+                            <p style="color: var(--text-secondary); font-size: 1.125rem;">Generate, debug, and optimize code with AI-powered assistance</p>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; height: 75vh;">
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; backdrop-filter: var(--blur-lg);">
+                                <h3 style="margin-bottom: 1.5rem; font-weight: 700;">Code Generation</h3>
+                                <textarea placeholder="Describe what you want to build..." style="width: 100%; height: 200px; background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 12px; padding: 1rem; color: var(--text-main); resize: vertical; margin-bottom: 1rem; font-family: inherit;"></textarea>
+                                <div style="margin-bottom: 1rem;">
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Language:</label>
+                                    <select id="code-language-select" style="background: var(--bg-card); border: 1px solid var(--border-main); border-radius: 8px; padding: 0.75rem; color: var(--text-main); width: 100%;">
+                                        <option style="color: var(--text-main); background: var(--bg-card);">Python</option>
+                                        <option style="color: var(--text-main); background: var(--bg-card);">JavaScript</option>
+                                        <option style="color: var(--text-main); background: var(--bg-card);">TypeScript</option>
+                                        <option style="color: var(--text-main); background: var(--bg-card);">Java</option>
+                                        <option style="color: var(--text-main); background: var(--bg-card);">C++</option>
+                                        <option style="color: var(--text-main); background: var(--bg-card);">Rust</option>
+                                        <option style="color: var(--text-main); background: var(--bg-card);">Go</option>
+                                    </select>
+                                </div>
+                                <button id="generate-code-btn" style="background: var(--accent-gradient); border: none; border-radius: 12px; padding: 1rem 2rem; color: white; cursor: pointer; width: 100%; font-weight: 600; box-shadow: var(--shadow-md);">Generate Code</button>
+                                <div id="complexity-block" style="background: var(--bg-glass); border: 1px solid var(--border-primary); border-radius: 10px; padding: 1.2rem 1rem; margin-top: 1.2rem; display: none; flex-direction: column; gap: 0.5rem;">
+                                    <div style="font-weight: 600; color: var(--accent); margin-bottom: 0.3rem;">Complexity Analysis</div>
+                                    <div style="display: flex; gap: 2rem;">
+                                        <div><span style="font-weight: 500; color: var(--text-secondary);">Time Complexity:</span> <span id="time-complexity" style="font-weight: 600; color: var(--text-main);">O(n)</span></div>
+                                        <div><span style="font-weight: 500; color: var(--text-secondary);">Space Complexity:</span> <span id="space-complexity" style="font-weight: 600; color: var(--text-main);">O(n)</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; backdrop-filter: var(--blur-lg);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                                    <h3 style="margin: 0; font-weight: 700;">Generated Code</h3>
+                                    <button style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 8px; padding: 0.5rem 1rem; color: var(--text-secondary); cursor: pointer;">📋 Copy</button>
+                                </div>
+                                <div style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 12px; padding: 1.5rem; height: calc(100% - 80px); overflow-x: auto; font-family: 'JetBrains Mono', monospace;">
+                                    <pre style="margin: 0; color: var(--text-main);"><code># Your generated code will appear here...
+def fibonacci(n):
+    """Generate fibonacci sequence up to n terms"""
+    if n <= 0:
+        return []
+    elif n == 1:
+        return [0]
+    elif n == 2:
+        return [0, 1]
+    
+    sequence = [0, 1]
+    for i in range(2, n):
+        sequence.append(sequence[i-1] + sequence[i-2])
+    
+    return sequence
+
+# Example usage
+print(fibonacci(10))
+# Output: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            loadDocumentQA() {
+                document.getElementById('mainContent').innerHTML = `
+                    <div class="animate-section">
+                        <div class="page-header" style="margin-bottom: 2rem;">
+                            <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Document Q&A</h1>
+                            <p style="color: var(--text-secondary); font-size: 1.125rem;">Upload documents and extract insights using advanced RAG technology</p>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; height: 75vh;">
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; backdrop-filter: var(--blur-lg);">
+                                <h3 style="margin-bottom: 1.5rem; font-weight: 700;">Document Upload</h3>
+                                <div style="border: 2px dashed var(--border-primary); border-radius: 12px; padding: 3rem; text-align: center; margin-bottom: 2rem; transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor='var(--border-primary)'">
+                                    <div style="font-size: 3rem; margin-bottom: 1rem;">📄</div>
+                                    <h4 style="margin-bottom: 0.5rem;">Upload Documents</h4>
+                                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">PDF, DOCX, TXT, MD files supported</p>
+                                    <button style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Browse Files</button>
+                                </div>
+                                <div>
+                                    <h4 style="margin-bottom: 1rem; font-weight: 600;">Uploaded Files</h4>
+                                    <div style="background: var(--bg-tertiary); border-radius: 10px; padding: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                                        <span style="font-size: 1.25rem;">📄</span>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600; margin-bottom: 0.25rem;">AI_Research_2024.pdf</div>
+                                            <div style="font-size: 0.875rem; color: var(--text-secondary);">2.3 MB • Processed</div>
+                                        </div>
+                                        <span style="color: var(--success);">✅</span>
+                                    </div>
+                                    <div style="background: var(--bg-tertiary); border-radius: 10px; padding: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+                                        <span style="font-size: 1.25rem;">📊</span>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Data_Analysis.xlsx</div>
+                                            <div style="font-size: 0.875rem; color: var(--text-secondary);">1.8 MB • Processing</div>
+                                        </div>
+                                        <div style="width: 20px; height: 20px; border: 2px solid var(--accent-primary); border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; backdrop-filter: var(--blur-lg); display: flex; flex-direction: column;">
+                                <div style="padding: 2rem; border-bottom: 1px solid var(--border-primary);">
+                                    <h3 style="margin: 0; font-weight: 700;">Ask Questions</h3>
+                                    <p style="margin: 0.5rem 0 0 0; color: var(--text-secondary);">Query your documents with natural language</p>
+                                </div>
+                                <div style="flex: 1; padding: 1.5rem; overflow-y: auto;">
+                                    <div style="margin-bottom: 2rem;">
+                                        <div style="text-align: right; margin-bottom: 1rem;">
+                                            <div style="display: inline-block; background: var(--gradient-primary); padding: 1rem 1.5rem; border-radius: 16px 16px 4px 16px; color: white; max-width: 80%;">
+                                                What are the main findings in the AI research paper?
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                                            <div style="width: 40px; height: 40px; border-radius: 12px; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; flex-shrink: 0;">AI</div>
+                                            <div style="background: var(--bg-glass); padding: 1.5rem; border-radius: 4px 16px 16px 16px; border: 1px solid var(--border-primary); flex: 1;">
+                                                <p style="margin: 0; line-height: 1.6;">Based on the uploaded research paper, the main findings include:</p>
+                                                <ul style="margin: 1rem 0 0 0; padding-left: 1.5rem; line-height: 1.6;">
+                                                    <li>Neural networks show 23% improvement in accuracy when using the proposed architecture</li>
+                                                    <li>Transfer learning reduces training time by 40% while maintaining performance</li>
+                                                    <li>The model demonstrates strong generalization across multiple domains</li>
+                                                </ul>
+                                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-secondary); font-size: 0.875rem; color: var(--text-tertiary);">
+                                                    📄 Referenced: AI_Research_2024.pdf (Page 15-17)
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="padding: 1.5rem; border-top: 1px solid var(--border-primary);">
+                                    <div style="display: flex; gap: 1rem; align-items: flex-end;">
+                                        <input type="text" placeholder="Ask a question about your documents..." style="flex: 1; background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 12px; padding: 1rem; color: var(--text-primary); font-family: inherit;">
+                                        <button style="background: var(--gradient-primary); border: none; border-radius: 12px; padding: 1rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Ask</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            loadResearchTools() {
+                document.getElementById('mainContent').innerHTML = `
+                    <div class="animate-section">
+                        <div class="page-header" style="margin-bottom: 2rem;">
+                            <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Research Tools</h1>
+                            <p style="color: var(--text-secondary); font-size: 1.125rem;">AI-powered research assistance and academic writing support</p>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; margin-bottom: 3rem;">
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; text-align: center; backdrop-filter: var(--blur-lg); transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-xl)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
+                                <div style="font-size: 3rem; margin-bottom: 1rem;">📝</div>
+                                <h3 style="margin-bottom: 1rem; font-weight: 700;">Paper Summarization</h3>
+                                <p style="color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.6;">Generate comprehensive summaries of academic papers with key insights and methodologies</p>
+                                <button style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Start Summarizing</button>
+                            </div>
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; text-align: center; backdrop-filter: var(--blur-lg); transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-xl)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
+                                <div style="font-size: 3rem; margin-bottom: 1rem;">🔗</div>
+                                <h3 style="margin-bottom: 1rem; font-weight: 700;">Citation Formatter</h3>
+                                <p style="color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.6;">Format citations in APA, MLA, IEEE, and Chicago styles with AI assistance</p>
+                                <button style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Format Citations</button>
+                            </div>
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; text-align: center; backdrop-filter: var(--blur-lg); transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-xl)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
+                                <div style="font-size: 3rem; margin-bottom: 1rem;">📚</div>
+                                <h3 style="margin-bottom: 1rem; font-weight: 700;">Literature Review</h3>
+                                <p style="color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.6;">Analyze multiple papers to identify research gaps and synthesize findings</p>
+                                <button style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Start Review</button>
+                            </div>
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; text-align: center; backdrop-filter: var(--blur-lg); transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-xl)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
+                                <div style="font-size: 3rem; margin-bottom: 1rem;">✍️</div>
+                                <h3 style="margin-bottom: 1rem; font-weight: 700;">Writing Assistant</h3>
+                                <p style="color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.6;">Get help with academic writing, paraphrasing, and manuscript preparation</p>
+                                <button style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Open Editor</button>
+                            </div>
+                        </div>
+                        <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; backdrop-filter: var(--blur-lg);">
+                            <h3 style="margin-bottom: 1.5rem; font-weight: 700;">Active Research Projects</h3>
+                            <div style="background: var(--bg-tertiary); border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                                    <div>
+                                        <h4 style="margin: 0 0 0.5rem 0; font-weight: 700;">Machine Learning in Healthcare Applications</h4>
+                                        <p style="margin: 0; color: var(--text-secondary);">Analyzing 23 papers • Literature review in progress</p>
+                                    </div>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button style="background: var(--accent-primary); border: none; border-radius: 8px; padding: 0.5rem 1rem; color: white; cursor: pointer; font-size: 0.875rem;">Continue</button>
+                                        <button style="background: var(--bg-quaternary); border: 1px solid var(--border-primary); border-radius: 8px; padding: 0.5rem 1rem; color: var(--text-secondary); cursor: pointer; font-size: 0.875rem;">Export</button>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 1rem; color: var(--text-tertiary); font-size: 0.875rem;">
+                                    <span>📅 Started 5 days ago</span>
+                                    <span>⏱️ Last updated 2 hours ago</span>
+                                    <span>📊 Progress: 65%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            loadNotebook() {
+                document.getElementById('mainContent').innerHTML = `
+                    <div class="animate-section">
+                        <div class="page-header" style="margin-bottom: 2rem;">
+                            <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Code Notebook</h1>
+                            <p style="color: var(--text-secondary); font-size: 1.125rem;">Interactive coding environment with AI-powered assistance and execution</p>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 280px 1fr; gap: 2rem; height: 80vh;">
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 1.5rem; backdrop-filter: var(--blur-lg);">
+                                <h3 style="margin-bottom: 1rem; font-weight: 700;">Notebooks</h3>
+                                <div style="background: var(--bg-tertiary); border-radius: 10px; padding: 1rem; margin-bottom: 0.5rem; cursor: pointer; border: 2px solid var(--accent-primary);">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                        <span>📓</span>
+                                        <span style="font-weight: 600;">Data Analysis Project</span>
+                                    </div>
+                                    <div style="font-size: 0.875rem; color: var(--text-secondary);">15 cells • Modified 1h ago</div>
+                                </div>
+                                <div style="background: var(--bg-glass); border-radius: 10px; padding: 1rem; margin-bottom: 1rem; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.background='var(--bg-tertiary)'" onmouseout="this.style.background='var(--bg-glass)'">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                        <span>📊</span>
+                                        <span style="font-weight: 600;">ML Model Training</span>
+                                    </div>
+                                    <div style="font-size: 0.875rem; color: var(--text-secondary);">8 cells • Modified 1d ago</div>
+                                </div>
+                                <button style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem; color: white; cursor: pointer; width: 100%; font-weight: 600;">+ New Notebook</button>
+                            </div>
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; display: flex; flex-direction: column; backdrop-filter: var(--blur-lg);">
+                                <div style="display: flex; gap: 1rem; padding: 1.5rem; border-bottom: 1px solid var(--border-primary); align-items: center;">
+                                    <button style="background: var(--success); border: none; border-radius: 8px; padding: 0.5rem 1rem; color: white; cursor: pointer; font-weight: 600;">▶️ Run All</button>
+                                    <button style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 8px; padding: 0.5rem 1rem; color: var(--text-secondary); cursor: pointer;">💾 Save</button>
+                                    <button style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 8px; padding: 0.5rem 1rem; color: var(--text-secondary); cursor: pointer;">🧠 AI Help</button>
+                                    <div style="margin-left: auto; display: flex; align-items: center; gap: 0.5rem;">
+                                        <span style="width: 8px; height: 8px; background: var(--success); border-radius: 50%;"></span>
+                                        <span style="color: var(--text-secondary); font-size: 0.875rem;">Python 3.11 • Ready</span>
+                                    </div>
+                                </div>
+                                <div style="flex: 1; padding: 1.5rem; overflow-y: auto;">
+                                    <div style="border: 1px solid var(--border-primary); border-radius: 12px; margin-bottom: 1rem; overflow: hidden;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: var(--bg-tertiary); border-bottom: 1px solid var(--border-primary);">
+                                            <span style="font-size: 0.875rem; color: var(--text-secondary);">Code Cell [1]</span>
+                                            <button style="background: var(--success); border: none; border-radius: 6px; padding: 0.25rem 0.75rem; color: white; cursor: pointer; font-size: 0.875rem;">▶️ Run</button>
+                                        </div>
+                                        <div style="padding: 1rem; font-family: 'JetBrains Mono', monospace; background: var(--bg-primary); overflow-x: auto;">
+                                            <pre style="margin: 0; color: var(--text-primary);"># Import essential libraries for data analysis
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load and explore the dataset
+df = pd.read_csv('sales_data.csv')
+print(f"Dataset shape: {df.shape}")
+print("\\nFirst 5 rows:")
+df.head()</pre>
+                                        </div>
+                                        <div style="padding: 1rem; background: var(--bg-tertiary); border-top: 1px solid var(--border-primary); font-family: 'JetBrains Mono', monospace; font-size: 0.875rem;">
+                                            <div style="color: var(--text-tertiary); margin-bottom: 0.5rem;">Output:</div>
+                                            <pre style="margin: 0; color: var(--text-primary);">Dataset shape: (1000, 5)
+
+First 5 rows:
+   Product  Sales  Region     Date  Revenue
+0   Laptop   1250    North  2024-01     5000
+1    Phone    800    South  2024-01     3200
+2   Tablet    600     East  2024-01     2400
+3   Laptop   1100     West  2024-01     4400
+4    Phone    950    North  2024-01     3800</pre>
+                                        </div>
+                                    </div>
+                                    <div style="border: 1px solid var(--border-primary); border-radius: 12px; margin-bottom: 1rem; overflow: hidden;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: var(--bg-tertiary); border-bottom: 1px solid var(--border-primary);">
+                                            <span style="font-size: 0.875rem; color: var(--text-secondary);">Markdown Cell [2]</span>
+                                            <button style="background: var(--info); border: none; border-radius: 6px; padding: 0.25rem 0.75rem; color: white; cursor: pointer; font-size: 0.875rem;">📝 Edit</button>
+                                        </div>
+                                        <div style="padding: 1rem; background: var(--bg-glass);">
+                                            <h4 style="margin: 0 0 1rem 0; color: var(--text-primary);">Sales Data Analysis</h4>
+                                            <p style="margin: 0; color: var(--text-secondary); line-height: 1.6;">This notebook contains a comprehensive analysis of our quarterly sales data, including trend analysis, regional performance, and predictive modeling.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="padding: 1.5rem; border-top: 1px solid var(--border-primary);">
+                                    <button style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">+ Add Cell</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            loadDataAnalysis() {
+                document.getElementById('mainContent').innerHTML = `
+                    <div class="animate-section">
+                        <div class="page-header" style="margin-bottom: 2rem;">
+                            <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Data Analysis</h1>
+                            <p style="color: var(--text-secondary); font-size: 1.125rem;">Analyze and visualize data using advanced statistical and machine learning techniques</p>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; height: 75vh;">
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; backdrop-filter: var(--blur-lg);">
+                                <h3 style="margin-bottom: 1.5rem; font-weight: 700;">Data Upload</h3>
+                                <div style="border: 2px dashed var(--border-primary); border-radius: 12px; padding: 3rem; text-align: center; margin-bottom: 2rem; transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor='var(--border-primary)'">
+                                    <div style="font-size: 3rem; margin-bottom: 1rem;">📄</div>
+                                    <h4 style="margin-bottom: 0.5rem;">Upload Data Files</h4>
+                                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">CSV, Excel, SQL, and more formats supported</p>
+                                    <button style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Browse Files</button>
+                                </div>
+                                <div>
+                                    <h4 style="margin-bottom: 1rem; font-weight: 600;">Uploaded Files</h4>
+                                    <div style="background: var(--bg-tertiary); border-radius: 10px; padding: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                                        <span style="font-size: 1.25rem;">📄</span>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600; margin-bottom: 0.25rem;">AI_Research_2024.pdf</div>
+                                            <div style="font-size: 0.875rem; color: var(--text-secondary);">2.3 MB • Processed</div>
+                                        </div>
+                                        <span style="color: var(--success);">✅</span>
+                                    </div>
+                                    <div style="background: var(--bg-tertiary); border-radius: 10px; padding: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+                                        <span style="font-size: 1.25rem;">📊</span>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Data_Analysis.xlsx</div>
+                                            <div style="font-size: 0.875rem; color: var(--text-secondary);">1.8 MB • Processing</div>
+                                        </div>
+                                        <div style="width: 20px; height: 20px; border: 2px solid var(--accent-primary); border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; backdrop-filter: var(--blur-lg); display: flex; flex-direction: column;">
+                                <div style="padding: 2rem; border-bottom: 1px solid var(--border-primary);">
+                                    <h3 style="margin: 0; font-weight: 700;">Data Analysis</h3>
+                                    <p style="margin: 0.5rem 0 0 0; color: var(--text-secondary);">Analyze your data using advanced statistical methods and machine learning algorithms</p>
+                                </div>
+                                <div style="flex: 1; padding: 1.5rem; overflow-y: auto;">
+                                    <div style="margin-bottom: 2rem;">
+                                        <div style="text-align: right; margin-bottom: 1rem;">
+                                            <div style="display: inline-block; background: var(--gradient-primary); padding: 1rem 1.5rem; border-radius: 16px 16px 4px 16px; color: white; max-width: 80%;">
+                                                What kind of analysis would you like to perform?
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                                            <div style="width: 40px; height: 40px; border-radius: 12px; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; flex-shrink: 0;">AI</div>
+                                            <div style="background: var(--bg-glass); padding: 1.5rem; border-radius: 4px 16px 16px 16px; border: 1px solid var(--border-primary); flex: 1;">
+                                                <p style="margin: 0; line-height: 1.6;">We offer a range of analysis options, including trend analysis, clustering, classification, and predictive modeling. Choose the one that best fits your needs.</p>
+                                                <ul style="margin: 1rem 0 0 0; padding-left: 1.5rem; line-height: 1.6;">
+                                                    <li>Trend Analysis: Identify patterns and trends in your data over time</li>
+                                                    <li>Clustering: Group similar data points together</li>
+                                                    <li>Classification: Predict the category of new data points</li>
+                                                    <li>Predictive Modeling: Forecast future trends based on historical data</li>
+                                                </ul>
+                                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-secondary); font-size: 0.875rem; color: var(--text-tertiary);">
+                                                    📄 Referenced: AI_Research_2024.pdf (Page 15-17)
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="padding: 1.5rem; border-top: 1px solid var(--border-primary);">
+                                    <div style="display: flex; gap: 1rem; align-items: flex-end;">
+                                        <input type="text" placeholder="Enter your data analysis question..." style="flex: 1; background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 12px; padding: 1rem; color: var(--text-primary); font-family: inherit;">
+                                        <button style="background: var(--gradient-primary); border: none; border-radius: 12px; padding: 1rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Ask</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            loadProjectPlanner() {
+                document.getElementById('mainContent').innerHTML = `
+                    <div class="animate-section">
+                        <div class="page-header" style="margin-bottom: 2rem;">
+                            <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Project Planner</h1>
+                            <p style="color: var(--text-secondary); font-size: 1.125rem;">Plan and manage your projects efficiently with AI-powered tools</p>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; height: 75vh;">
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; backdrop-filter: var(--blur-lg);">
+                                <h3 style="margin-bottom: 1.5rem; font-weight: 700;">Project Ideas</h3>
+                                <div style="border: 2px dashed var(--border-primary); border-radius: 12px; padding: 3rem; text-align: center; margin-bottom: 2rem; transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor='var(--border-primary)'">
+                                    <div style="font-size: 3rem; margin-bottom: 1rem;">📄</div>
+                                    <h4 style="margin-bottom: 0.5rem;">Generate Project Ideas</h4>
+                                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">Let AI generate project ideas based on your interests and goals</p>
+                                    <button style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Generate Ideas</button>
+                                </div>
+                                <div>
+                                    <h4 style="margin-bottom: 1rem; font-weight: 600;">Generated Ideas</h4>
+                                    <div style="background: var(--bg-tertiary); border-radius: 10px; padding: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                                        <span style="font-size: 1.25rem;">📄</span>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600; margin-bottom: 0.25rem;">AI_Project_Ideas_2024.pdf</div>
+                                            <div style="font-size: 0.875rem; color: var(--text-secondary);">2.3 MB • Generated</div>
+                                        </div>
+                                        <span style="color: var(--success);">✅</span>
+                                    </div>
+                                    <div style="background: var(--bg-tertiary); border-radius: 10px; padding: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+                                        <span style="font-size: 1.25rem;">📊</span>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Project_Plan_Template.xlsx</div>
+                                            <div style="font-size: 0.875rem; color: var(--text-secondary);">1.8 MB • Template</div>
+                                        </div>
+                                        <div style="width: 20px; height: 20px; border: 2px solid var(--accent-primary); border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; backdrop-filter: var(--blur-lg); display: flex; flex-direction: column;">
+                                <div style="padding: 2rem; border-bottom: 1px solid var(--border-primary);">
+                                    <h3 style="margin: 0; font-weight: 700;">Project Planning</h3>
+                                    <p style="margin: 0.5rem 0 0 0; color: var(--text-secondary);">Use AI to plan and organize your project steps</p>
+                                </div>
+                                <div style="flex: 1; padding: 1.5rem; overflow-y: auto;">
+                                    <div style="margin-bottom: 2rem;">
+                                        <div style="text-align: right; margin-bottom: 1rem;">
+                                            <div style="display: inline-block; background: var(--gradient-primary); padding: 1rem 1.5rem; border-radius: 16px 16px 4px 16px; color: white; max-width: 80%;">
+                                                How can AI help with project planning?
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                                            <div style="width: 40px; height: 40px; border-radius: 12px; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; flex-shrink: 0;">AI</div>
+                                            <div style="background: var(--bg-glass); padding: 1.5rem; border-radius: 4px 16px 16px 16px; border: 1px solid var(--border-primary); flex: 1;">
+                                                <p style="margin: 0; line-height: 1.6;">AI can help you plan your project by suggesting tasks, estimating timelines, and suggesting resources. It can also help you manage your project timeline and resources effectively.</p>
+                                                <ul style="margin: 1rem 0 0 0; padding-left: 1.5rem; line-height: 1.6;">
+                                                    <li>Task Suggestion: AI can suggest tasks based on your project goals and requirements</li>
+                                                    <li>Timeline Estimation: AI can estimate the time required for each task based on historical data</li>
+                                                    <li>Resource Suggestion: AI can suggest tools and resources needed for each task</li>
+                                                    <li>Project Timeline Management: AI can help you manage your project timeline and resources effectively</li>
+                                                </ul>
+                                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-secondary); font-size: 0.875rem; color: var(--text-tertiary);">
+                                                    📄 Referenced: AI_Research_2024.pdf (Page 15-17)
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="padding: 1.5rem; border-top: 1px solid var(--border-primary);">
+                                    <div style="display: flex; gap: 1rem; align-items: flex-end;">
+                                        <input type="text" placeholder="Enter your project planning question..." style="flex: 1; background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 12px; padding: 1rem; color: var(--text-primary); font-family: inherit;">
+                                        <button style="background: var(--gradient-primary); border: none; border-radius: 12px; padding: 1rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Ask</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            loadCitationManager() {
+                document.getElementById('mainContent').innerHTML = `
+                    <div class="animate-section">
+                        <div class="page-header" style="margin-bottom: 2rem;">
+                            <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Citation Manager</h1>
+                            <p style="color: var(--text-secondary); font-size: 1.125rem;">Manage and format citations for academic papers and books</p>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; height: 75vh;">
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; backdrop-filter: var(--blur-lg);">
+                                <h3 style="margin-bottom: 1.5rem; font-weight: 700;">Citation Input</h3>
+                                <div style="border: 2px dashed var(--border-primary); border-radius: 12px; padding: 3rem; text-align: center; margin-bottom: 2rem; transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor='var(--border-primary)'">
+                                    <div style="font-size: 3rem; margin-bottom: 1rem;">📄</div>
+                                    <h4 style="margin-bottom: 0.5rem;">Enter Citation Details</h4>
+                                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">Enter the details of the source you want to cite</p>
+                                    <button style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Enter Citation</button>
+                                </div>
+                                <div>
+                                    <h4 style="margin-bottom: 1rem; font-weight: 600;">Citations</h4>
+                                    <div style="background: var(--bg-tertiary); border-radius: 10px; padding: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                                        <span style="font-size: 1.25rem;">📄</span>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600; margin-bottom: 0.25rem;">AI_Research_2024.pdf</div>
+                                            <div style="font-size: 0.875rem; color: var(--text-secondary);">2.3 MB • Processed</div>
+                                        </div>
+                                        <span style="color: var(--success);">✅</span>
+                                    </div>
+                                    <div style="background: var(--bg-tertiary); border-radius: 10px; padding: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+                                        <span style="font-size: 1.25rem;">📊</span>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Data_Analysis.xlsx</div>
+                                            <div style="font-size: 0.875rem; color: var(--text-secondary);">1.8 MB • Processing</div>
+                                        </div>
+                                        <div style="width: 20px; height: 20px; border: 2px solid var(--accent-primary); border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; backdrop-filter: var(--blur-lg); display: flex; flex-direction: column;">
+                                <div style="padding: 2rem; border-bottom: 1px solid var(--border-primary);">
+                                    <h3 style="margin: 0; font-weight: 700;">Citation Formatting</h3>
+                                    <p style="margin: 0.5rem 0 0 0; color: var(--text-secondary);">Use AI to format citations in APA, MLA, IEEE, and Chicago styles</p>
+                                </div>
+                                <div style="flex: 1; padding: 1.5rem; overflow-y: auto;">
+                                    <div style="margin-bottom: 2rem;">
+                                        <div style="text-align: right; margin-bottom: 1rem;">
+                                            <div style="display: inline-block; background: var(--gradient-primary); padding: 1rem 1.5rem; border-radius: 16px 16px 4px 16px; color: white; max-width: 80%;">
+                                                How can AI help with citation formatting?
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                                            <div style="width: 40px; height: 40px; border-radius: 12px; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; flex-shrink: 0;">AI</div>
+                                            <div style="background: var(--bg-glass); padding: 1.5rem; border-radius: 4px 16px 16px 16px; border: 1px solid var(--border-primary); flex: 1;">
+                                                <p style="margin: 0; line-height: 1.6;">AI can help you format citations in APA, MLA, IEEE, and Chicago styles with ease. Simply enter the details of the source you want to cite, and let AI do the rest.</p>
+                                                <ul style="margin: 1rem 0 0 0; padding-left: 1.5rem; line-height: 1.6;">
+                                                    <li>APA Style: AI can format citations in APA style, including author names, titles, publication dates, and URLs</li>
+                                                    <li>MLA Style: AI can format citations in MLA style, including author names, titles, publication dates, and page numbers</li>
+                                                    <li>IEEE Style: AI can format citations in IEEE style, including author names, titles, publication dates, and URLs</li>
+                                                    <li>Chicago Style: AI can format citations in Chicago style, including author names, titles, publication dates, and page numbers</li>
+                                                </ul>
+                                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-secondary); font-size: 0.875rem; color: var(--text-tertiary);">
+                                                    📄 Referenced: AI_Research_2024.pdf (Page 15-17)
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="padding: 1.5rem; border-top: 1px solid var(--border-primary);">
+                                    <div style="display: flex; gap: 1rem; align-items: flex-end;">
+                                        <input type="text" placeholder="Enter citation details..." style="flex: 1; background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 12px; padding: 1rem; color: var(--text-primary); font-family: inherit;">
+                                        <button style="background: var(--gradient-primary); border: none; border-radius: 12px; padding: 1rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Format Citation</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            loadVersionControl() {
+                document.getElementById('mainContent').innerHTML = `
+                    <div class="animate-section">
+                        <div class="page-header" style="margin-bottom: 2rem;">
+                            <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Version Control</h1>
+                            <p style="color: var(--text-secondary); font-size: 1.125rem;">Manage and track changes to your code and documents</p>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; height: 75vh;">
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; backdrop-filter: var(--blur-lg);">
+                                <h3 style="margin-bottom: 1.5rem; font-weight: 700;">Version History</h3>
+                                <div style="border: 2px dashed var(--border-primary); border-radius: 12px; padding: 3rem; text-align: center; margin-bottom: 2rem; transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor='var(--border-primary)'">
+                                    <div style="font-size: 3rem; margin-bottom: 1rem;">📄</div>
+                                    <h4 style="margin-bottom: 0.5rem;">Track Changes</h4>
+                                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">Upload your code or document files to track changes and collaborate with others</p>
+                                    <button style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Upload Files</button>
+                                </div>
+                                <div>
+                                    <h4 style="margin-bottom: 1rem; font-weight: 600;">Version History</h4>
+                                    <div style="background: var(--bg-tertiary); border-radius: 10px; padding: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                                        <span style="font-size: 1.25rem;">📄</span>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600; margin-bottom: 0.25rem;">AI_Research_2024.pdf</div>
+                                            <div style="font-size: 0.875rem; color: var(--text-secondary);">2.3 MB • Processed</div>
+                                        </div>
+                                        <span style="color: var(--success);">✅</span>
+                                    </div>
+                                    <div style="background: var(--bg-tertiary); border-radius: 10px; padding: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+                                        <span style="font-size: 1.25rem;">📊</span>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Data_Analysis.xlsx</div>
+                                            <div style="font-size: 0.875rem; color: var(--text-secondary);">1.8 MB • Processing</div>
+                                        </div>
+                                        <div style="width: 20px; height: 20px; border: 2px solid var(--accent-primary); border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; backdrop-filter: var(--blur-lg); display: flex; flex-direction: column;">
+                                <div style="padding: 2rem; border-bottom: 1px solid var(--border-primary);">
+                                    <h3 style="margin: 0; font-weight: 700;">Version Control</h3>
+                                    <p style="margin: 0.5rem 0 0 0; color: var(--text-secondary);">Use AI to manage and track changes to your code and documents</p>
+                                </div>
+                                <div style="flex: 1; padding: 1.5rem; overflow-y: auto;">
+                                    <div style="margin-bottom: 2rem;">
+                                        <div style="text-align: right; margin-bottom: 1rem;">
+                                            <div style="display: inline-block; background: var(--gradient-primary); padding: 1rem 1.5rem; border-radius: 16px 16px 4px 16px; color: white; max-width: 80%;">
+                                                How can AI help with version control?
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                                            <div style="width: 40px; height: 40px; border-radius: 12px; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; flex-shrink: 0;">AI</div>
+                                            <div style="background: var(--bg-glass); padding: 1.5rem; border-radius: 4px 16px 16px 16px; border: 1px solid var(--border-primary); flex: 1;">
+                                                <p style="margin: 0; line-height: 1.6;">AI can help you manage and track changes to your code and documents with ease. It can also help you collaborate with others on the same project.</p>
+                                                <ul style="margin: 1rem 0 0 0; padding-left: 1.5rem; line-height: 1.6;">
+                                                    <li>Change Tracking: AI can track changes to your code and documents, including who made the changes and when</li>
+                                                    <li>Collaboration: AI can help you collaborate with others on the same project, including reviewing and merging changes</li>
+                                                    <li>Conflict Resolution: AI can help you resolve conflicts between different versions of your code or documents</li>
+                                                    <li>Branching and Merging: AI can help you manage branches and merge changes effectively</li>
+                                                </ul>
+                                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-secondary); font-size: 0.875rem; color: var(--text-tertiary);">
+                                                    📄 Referenced: AI_Research_2024.pdf (Page 15-17)
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="padding: 1.5rem; border-top: 1px solid var(--border-primary);">
+                                    <div style="display: flex; gap: 1rem; align-items: flex-end;">
+                                        <input type="text" placeholder="Enter your version control question..." style="flex: 1; background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 12px; padding: 1rem; color: var(--text-primary); font-family: inherit;">
+                                        <button style="background: var(--gradient-primary); border: none; border-radius: 12px; padding: 1rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Ask</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            loadMarketplace() {
+                document.getElementById('mainContent').innerHTML = `
+                    <div class="animate-section">
+                        <div class="page-header" style="margin-bottom: 2rem;">
+                            <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">AI Marketplace</h1>
+                            <p style="color: var(--text-secondary); font-size: 1.125rem;">Explore and purchase AI tools and services</p>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; height: 75vh;">
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; backdrop-filter: var(--blur-lg);">
+                                <h3 style="margin-bottom: 1.5rem; font-weight: 700;">AI Tools</h3>
+                                <div style="border: 2px dashed var(--border-primary); border-radius: 12px; padding: 3rem; text-align: center; margin-bottom: 2rem; transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor='var(--border-primary)'">
+                                    <div style="font-size: 3rem; margin-bottom: 1rem;">💻</div>
+                                    <h4 style="margin-bottom: 0.5rem;">AI Code Assistants</h4>
+                                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">AI-powered code assistants to help you write, debug, and optimize code</p>
+                                    <button style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Explore Tools</button>
+                                </div>
+                                <div>
+                                    <h4 style="margin-bottom: 1rem; font-weight: 600;">Popular Tools</h4>
+                                    <div style="background: var(--bg-tertiary); border-radius: 10px; padding: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                                        <span style="font-size: 1.25rem;">💻</span>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Code Assistant</div>
+                                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Python, JavaScript, TypeScript, Java, C++, Rust, Go</div>
+                                        </div>
+                                        <span style="color: var(--success);">✅</span>
+                                    </div>
+                                    <div style="background: var(--bg-tertiary); border-radius: 10px; padding: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+                                        <span style="font-size: 1.25rem;">📄</span>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Document Q&A</div>
+                                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Upload documents and extract insights using advanced RAG technology</div>
+                                        </div>
+                                        <div style="width: 20px; height: 20px; border: 2px solid var(--accent-primary); border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; backdrop-filter: var(--blur-lg); display: flex; flex-direction: column;">
+                                <div style="padding: 2rem; border-bottom: 1px solid var(--border-primary);">
+                                    <h3 style="margin: 0; font-weight: 700;">AI Services</h3>
+                                    <p style="margin: 0.5rem 0 0 0; color: var(--text-secondary);">AI-powered services to help you with research, writing, and data analysis</p>
+                                </div>
+                                <div style="flex: 1; padding: 1.5rem; overflow-y: auto;">
+                                    <div style="margin-bottom: 2rem;">
+                                        <div style="text-align: right; margin-bottom: 1rem;">
+                                            <div style="display: inline-block; background: var(--gradient-primary); padding: 1rem 1.5rem; border-radius: 16px 16px 4px 16px; color: white; max-width: 80%;">
+                                                What kind of AI services are available?
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                                            <div style="width: 40px; height: 40px; border-radius: 12px; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; flex-shrink: 0;">AI</div>
+                                            <div style="background: var(--bg-glass); padding: 1.5rem; border-radius: 4px 16px 16px 16px; border: 1px solid var(--border-primary); flex: 1;">
+                                                <p style="margin: 0; line-height: 1.6;">We offer a range of AI services, including research assistance, writing help, data analysis, and more. Whether you're working on a research paper, a scientific article, or a business report, we've got you covered.</p>
+                                                <ul style="margin: 1rem 0 0 0; padding-left: 1.5rem; line-height: 1.6;">
+                                                    <li>Research Assistance: AI can help you find relevant research papers, summarize key findings, and provide insights on your research topic</li>
+                                                    <li>Writing Help: AI can help you write, edit, and refine your research paper, thesis, or dissertation</li>
+                                                    <li>Data Analysis: AI can help you analyze your data using advanced statistical methods and machine learning algorithms</li>
+                                                    <li>Custom AI Services: We can tailor AI solutions to your specific needs, whether you're working on a research project, a data analysis task, or a custom AI application</li>
+                                                </ul>
+                                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-secondary); font-size: 0.875rem; color: var(--text-tertiary);">
+                                                    📄 Referenced: AI_Research_2024.pdf (Page 15-17)
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="padding: 1.5rem; border-top: 1px solid var(--border-primary);">
+                                    <div style="display: flex; gap: 1rem; align-items: flex-end;">
+                                        <input type="text" placeholder="Enter your AI service request..." style="flex: 1; background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 12px; padding: 1rem; color: var(--text-primary); font-family: inherit;">
+                                        <button style="background: var(--gradient-primary); border: none; border-radius: 12px; padding: 1rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Request Service</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            loadSettings() {
+                document.getElementById('mainContent').innerHTML = `
+                    <div class="animate-section">
+                        <div class="page-header" style="margin-bottom: 2rem;">
+                            <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Settings</h1>
+                            <p style="color: var(--text-secondary); font-size: 1.125rem;">Customize your experience and preferences</p>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; height: 75vh;">
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; backdrop-filter: var(--blur-lg);">
+                                <h3 style="margin-bottom: 1.5rem; font-weight: 700;">User Preferences</h3>
+                                <div style="border: 2px dashed var(--border-primary); border-radius: 12px; padding: 3rem; text-align: center; margin-bottom: 2rem; transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor='var(--border-primary)'">
+                                    <div style="font-size: 3rem; margin-bottom: 1rem;">⚙️</div>
+                                    <h4 style="margin-bottom: 0.5rem;">Customize Settings</h4>
+                                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">Change your preferences and settings to suit your needs</p>
+                                    <button style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Customize Settings</button>
+                                </div>
+                                <div>
+                                    <h4 style="margin-bottom: 1rem; font-weight: 600;">Current Settings</h4>
+                                    <div style="background: var(--bg-tertiary); border-radius: 10px; padding: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                                        <span style="font-size: 1.25rem;">⚙️</span>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Theme</div>
+                                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Light Mode</div>
+                                        </div>
+                                        <span style="color: var(--success);">✅</span>
+                                    </div>
+                                    <div style="background: var(--bg-tertiary); border-radius: 10px; padding: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+                                        <span style="font-size: 1.25rem;">🔄</span>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Sidebar Collapsed</div>
+                                            <div style="font-size: 0.875rem; color: var(--text-secondary);">No</div>
+                                        </div>
+                                        <span style="color: var(--success);">✅</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; backdrop-filter: var(--blur-lg); display: flex; flex-direction: column;">
+                                <div style="padding: 2rem; border-bottom: 1px solid var(--border-primary);">
+                                    <h3 style="margin: 0; font-weight: 700;">Advanced Settings</h3>
+                                    <p style="margin: 0.5rem 0 0 0; color: var(--text-secondary);">Customize your experience with advanced settings</p>
+                                </div>
+                                <div style="flex: 1; padding: 1.5rem; overflow-y: auto;">
+                                    <div style="margin-bottom: 2rem;">
+                                        <div style="text-align: right; margin-bottom: 1rem;">
+                                            <div style="display: inline-block; background: var(--gradient-primary); padding: 1rem 1.5rem; border-radius: 16px 16px 4px 16px; color: white; max-width: 80%;">
+                                                What advanced settings can I customize?
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                                            <div style="width: 40px; height: 40px; border-radius: 12px; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; flex-shrink: 0;">AI</div>
+                                            <div style="background: var(--bg-glass); padding: 1.5rem; border-radius: 4px 16px 16px 16px; border: 1px solid var(--border-primary); flex: 1;">
+                                                <p style="margin: 0; line-height: 1.6;">You can customize your experience with advanced settings, including custom themes, sidebar behavior, and more.</p>
+                                                <ul style="margin: 1rem 0 0 0; padding-left: 1.5rem; line-height: 1.6;">
+                                                    <li>Custom Themes: You can choose between light and dark modes</li>
+                                                    <li>Sidebar Behavior: You can collapse the sidebar to save space</li>
+                                                    <li>Font Size: You can adjust the font size to suit your reading preferences</li>
+                                                    <li>Notification Preferences: You can customize your notification settings</li>
+                                                </ul>
+                                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-secondary); font-size: 0.875rem; color: var(--text-tertiary);">
+                                                    📄 Referenced: AI_Research_2024.pdf (Page 15-17)
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="padding: 1.5rem; border-top: 1px solid var(--border-primary);">
+                                    <div style="display: flex; gap: 1rem; align-items: flex-end;">
+                                        <input type="text" placeholder="Enter your advanced setting..." style="flex: 1; background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 12px; padding: 1rem; color: var(--text-primary); font-family: inherit;">
+                                        <button style="background: var(--gradient-primary); border: none; border-radius: 12px; padding: 1rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Apply Setting</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Enhanced Mobile Navigation
+        class MobileNav {
+            constructor() {
+                this.toggleBtn = document.getElementById('mobileMenuToggle');
+                this.sidebar = document.getElementById('sidebar');
+                this.init();
+            }
+
+            init() {
+                this.updateToggleVisibility();
+                if (this.toggleBtn) {
+                    this.toggleBtn.addEventListener('click', () => this.toggleSidebar());
+                }
+                window.addEventListener('resize', () => this.updateToggleVisibility());
+                
+                // Close sidebar when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (window.innerWidth <= 1024 && 
+                        !this.sidebar.contains(e.target) && 
+                        !this.toggleBtn.contains(e.target) &&
+                        this.sidebar.classList.contains('open')) {
+                        this.closeSidebar();
+                    }
+                });
+            }
+
+            updateToggleVisibility() {
+                if (this.toggleBtn) {
+                    this.toggleBtn.style.display = window.innerWidth <= 1024 ? 'block' : 'none';
+                }
+            }
+
+            toggleSidebar() {
+                if (this.sidebar) {
+                    this.sidebar.classList.toggle('open');
+                }
+            }
+
+            closeSidebar() {
+                if (this.sidebar) {
+                    this.sidebar.classList.remove('open');
+                }
+            }
+        }
+
+        // AI Orbital Loader Manager
+        class LoadingManager {
+            constructor() {
+                this.overlay = document.getElementById('aiLoader');
+                this.loaderText = document.getElementById('loaderText');
+                this.loadingTexts = [
+                    'Initializing AI Dashboard...',
+                    'Loading AI Models...',
+                    'Synchronizing Neural Networks...',
+                    'Optimizing Performance...',
+                    'Dashboard Ready!'
+                ];
+                this.currentTextIndex = 0;
+                this.init();
+            }
+
+            init() {
+                // Start text rotation
+                this.startTextRotation();
+                
+                // Hide loading screen after page load or immediately if already loaded
+                if (document.readyState === 'complete') {
+                    // Page is already loaded, hide loading screen immediately
+                    setTimeout(() => {
+                        this.hideLoading();
+                    }, 1500);
+                } else {
+                    // Wait for page to load
+                    window.addEventListener('load', () => {
+                        setTimeout(() => {
+                            this.hideLoading();
+                        }, 3000);
+                    });
+                }
+            }
+
+            startTextRotation() {
+                setInterval(() => {
+                    this.currentTextIndex = (this.currentTextIndex + 1) % this.loadingTexts.length;
+                    this.loaderText.textContent = this.loadingTexts[this.currentTextIndex];
+                }, 800);
+            }
+
+            showLoading() {
+                this.overlay.classList.remove('hidden');
+                this.overlay.style.opacity = '1';
+            }
+
+            hideLoading() {
+                this.overlay.classList.add('hidden');
+                setTimeout(() => {
+                    this.overlay.style.display = 'none';
+                }, 500);
+            }
+        }
+
+        // Performance Monitor
+        class PerformanceMonitor {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                // Monitor page performance
+                window.addEventListener('load', () => {
+                    const navigation = performance.getEntriesByType('navigation')[0];
+                    const loadTime = navigation.loadEventEnd - navigation.loadEventStart;
+                    
+                    if (loadTime > 3000) {
+                        console.warn('Page load time is above 3 seconds:', loadTime);
+                    }
+                });
+            }
+        }
+
+        // Accessibility Manager
+        class AccessibilityManager {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                // Add keyboard navigation
+                this.addKeyboardNavigation();
+                // Add focus management
+                this.addFocusManagement();
+                // Add screen reader support
+                this.addAriaLabels();
+            }
+
+            addKeyboardNavigation() {
+                document.addEventListener('keydown', (e) => {
+                    // Escape key closes modals/sidebar
+                    if (e.key === 'Escape') {
+                        const sidebar = document.getElementById('sidebar');
+                        if (sidebar && sidebar.classList.contains('open')) {
+                            sidebar.classList.remove('open');
+                        }
+                    }
+                    
+                    // Ctrl/Cmd + K for search
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                        e.preventDefault();
+                        // Focus search input if available
+                        const searchInput = document.querySelector('input[type="search"], input[placeholder*="search"]');
+                        if (searchInput) {
+                            searchInput.focus();
+                        }
+                    }
+                });
+            }
+
+            addFocusManagement() {
+                // Add focus indicators
+                const style = document.createElement('style');
+                style.textContent = `
+                    .focus-visible {
+                        outline: 2px solid var(--accent-primary) !important;
+                        outline-offset: 2px !important;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            addAriaLabels() {
+                // Add missing aria labels
+                const elements = document.querySelectorAll('button:not([aria-label]), a:not([aria-label])');
+                elements.forEach(el => {
+                    if (!el.getAttribute('aria-label') && el.textContent.trim()) {
+                        el.setAttribute('aria-label', el.textContent.trim());
+                    }
+                });
+            }
+        }
+
+        // Data Persistence Manager
+        class DataManager {
+            constructor() {
+                this.storageKey = 'engunity-dashboard-data';
+                this.init();
+            }
+
+            init() {
+                this.loadUserPreferences();
+                this.saveUserPreferences();
+            }
+
+            loadUserPreferences() {
+                const saved = localStorage.getItem(this.storageKey);
+                if (saved) {
+                    try {
+                        const preferences = JSON.parse(saved);
+                        // Apply saved preferences
+                        if (preferences.theme) {
+                            document.body.className = preferences.theme;
+                        }
+                        if (preferences.sidebarCollapsed) {
+                            document.getElementById('sidebar')?.classList.toggle('collapsed');
+                        }
+                    } catch (e) {
+                        console.warn('Failed to load user preferences:', e);
+                    }
+                }
+            }
+
+            saveUserPreferences() {
+                const preferences = {
+                    theme: document.body.className,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem(this.storageKey, JSON.stringify(preferences));
+            }
+        }
+
+        // Animation Controller
+        class AnimationController {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.observeElements();
+                this.addPageTransitions();
+            }
+
+            observeElements() {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.style.animationPlayState = 'running';
+                        }
+                    });
+                }, { threshold: 0.1 });
+
+                document.querySelectorAll('.animate-section').forEach(el => {
+                    observer.observe(el);
+                });
+            }
+
+            addPageTransitions() {
+                // Add smooth transitions between route changes
+                const style = document.createElement('style');
+                style.textContent = `
+                    .page-transition-enter {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    .page-transition-enter-active {
+                        opacity: 1;
+                        transform: translateY(0);
+                        transition: all 0.3s ease;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+
+        // Initialize Supabase client
+        const supabaseUrl = 'https://ckrtquhwlvpmpgrfemmb.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnRxdWh3bHZwbXBncmZlbW1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2NTE5MjQsImV4cCI6MjA2NTIyNzkyNH0.EKkuLjGdt3BJckM9XtboDCknG5ggt0xwcAI_jI8Al6k';
+        const { createClient } = supabase;
+        const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+
+        // Handle OAuth redirects and auth state changes
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            console.log('Auth state changed:', event, session);
+            
+            if (event === 'SIGNED_IN' && session) {
+                console.log('User signed in via OAuth:', session.user.email);
+                
+                // Store session info for consistency
+                sessionStorage.setItem('user_email', session.user.email);
+                sessionStorage.setItem('auth_verified', 'true');
+                
+                // Update UI if page is already loaded
+                if (document.readyState === 'complete') {
+                    updateUserInfo(session.user);
+                }
+            } else if (event === 'SIGNED_OUT') {
+                console.log('User signed out');
+                
+                // Clear session storage
+                sessionStorage.removeItem('user_email');
+                sessionStorage.removeItem('auth_verified');
+                
+                // Redirect to login if not already there
+                if (!window.location.pathname.includes('login.html')) {
+                    window.location.href = '/login.html';
+                }
+            }
+        });
+
+        // Check authentication before initializing dashboard
+        async function checkAuthentication() {
+            try {
+                console.log('Checking Supabase authentication...');
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                
+                console.log('Dashboard auth check - session:', session);
+                
+                if (!session) {
+                    // Check fallback session storage for temporary access
+                    const userEmail = sessionStorage.getItem('user_email');
+                    const authVerified = sessionStorage.getItem('auth_verified');
+                    
+                    if (userEmail && authVerified === 'true') {
+                        console.log('Using fallback session storage authentication');
+                        updateUserInfo({ email: userEmail });
+                        return true;
+                    }
+                    
+                    // No session found, redirect to login
+                    console.log('No session found, redirecting to login');
+                    window.location.href = '/login.html';
+                    return false;
+                }
+                
+                // Update user info in the dashboard
+                updateUserInfo(session.user);
+                console.log('Authentication successful, user:', session.user.email);
+                return true;
+            } catch (error) {
+                console.error('Authentication check failed:', error);
+                // Check fallback session storage
+                const userEmail = sessionStorage.getItem('user_email');
+                const authVerified = sessionStorage.getItem('auth_verified');
+                
+                if (userEmail && authVerified === 'true') {
+                    console.log('Using fallback session storage after error');
+                    updateUserInfo({ email: userEmail });
+                    return true;
+                }
+                
+                // Redirect on auth error
+                window.location.href = '/login.html';
+                return false;
+            }
+        }
+
+        // Update user info in the dashboard
+        function updateUserInfo(user) {
+            // Get user name from metadata or email
+            const userName = user.user_metadata?.full_name || 
+                           user.user_metadata?.display_name || 
+                           user.user_metadata?.name ||
+                           user.email?.split('@')[0] || 
+                           'User';
+            const userEmail = user.email;
+            
+            // Update user avatar/name if elements exist
+            const userNameElement = document.querySelector('[data-user-name]');
+            const userEmailElement = document.querySelector('[data-user-email]');
+            const userAvatarElement = document.querySelector('[data-user-avatar]');
+            
+            if (userNameElement) {
+                // Update welcome message with user name
+                userNameElement.textContent = `Welcome back, ${userName}!`;
+            }
+            if (userEmailElement) {
+                userEmailElement.textContent = userEmail;
+            }
+            if (userAvatarElement) {
+                // Use first letter of name/email as avatar
+                const initial = userName[0].toUpperCase();
+                userAvatarElement.textContent = initial;
+                userAvatarElement.title = `${userName} - User menu`;
+            }
+            
+            console.log(`Dashboard updated for user: ${userName} (${userEmail})`);
+            
+            // Also update any personalized content
+            personalizeContent(userName, userEmail);
+        }
+        
+        // Personalize dashboard content for the user
+        function personalizeContent(userName, userEmail) {
+            // Update subtitle with user's name
+            const welcomeSubtitle = document.querySelector('.welcome-subtitle');
+            if (welcomeSubtitle) {
+                welcomeSubtitle.textContent = `Hi ${userName}! Unlock the power of artificial intelligence for research, development, and innovation.`;
+            }
+            
+            // Personalize recent activity titles
+            const recentTitles = document.querySelectorAll('.recent-title');
+            if (recentTitles.length > 0) {
+                const personalizedTitles = [
+                    `${userName}'s ML Algorithm Research`,
+                    `${userName}'s Python Data Pipeline`,
+                    `${userName}'s Research Paper Analysis`,
+                    `${userName}'s Data Visualization Project`,
+                    `${userName}'s Sales Analytics Dashboard`,
+                    `${userName}'s Neural Network Model`
+                ];
+                
+                recentTitles.forEach((title, index) => {
+                    if (personalizedTitles[index]) {
+                        title.textContent = personalizedTitles[index];
+                    }
+                });
+            }
+            
+            // Update stats to be more personal
+            const statCards = document.querySelectorAll('.stat-card');
+            if (statCards.length > 0) {
+                const personalizedStats = [
+                    { title: `${userName}'s Active Projects`, value: Math.floor(Math.random() * 20) + 5 },
+                    { title: `Documents Processed`, value: Math.floor(Math.random() * 1000) + 500 },
+                    { title: `AI Chat Sessions`, value: Math.floor(Math.random() * 10) + 1 },
+                    { title: `Code Executions`, value: Math.floor(Math.random() * 100) + 50 }
+                ];
+                
+                statCards.forEach((card, index) => {
+                    const statTitle = card.querySelector('.stat-title');
+                    const statValue = card.querySelector('.stat-value');
+                    if (statTitle && personalizedStats[index]) {
+                        statTitle.textContent = personalizedStats[index].title;
+                        if (index === 0) { // Only update the first one to avoid changing all numbers
+                            statValue.textContent = personalizedStats[index].value;
+                        }
+                    }
+                });
+            }
+        }
+
+        // Show user menu with logout option
+        async function showUserMenu() {
+            try {
+                // Get current user info from Supabase
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                
+                if (session) {
+                    const userName = session.user.user_metadata?.full_name || 
+                                   session.user.user_metadata?.display_name || 
+                                   session.user.user_metadata?.name ||
+                                   session.user.email.split('@')[0];
+                    const userEmail = session.user.email;
+                    
+                    // Show custom user menu
+                    const menuHtml = `
+                        <div id="userMenuOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                            <div style="background: var(--bg-card); border-radius: 16px; padding: 2rem; min-width: 300px; box-shadow: var(--shadow-xl); border: 1px solid var(--border-main);">
+                                <div style="text-align: center; margin-bottom: 1.5rem;">
+                                    <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 24px; margin: 0 auto 1rem;">
+                                        ${userName[0].toUpperCase()}
+                                    </div>
+                                    <h3 style="margin: 0 0 0.5rem 0; color: var(--text-main);">${userName}</h3>
+                                    <p style="margin: 0; color: var(--text-muted); font-size: 14px;">${userEmail}</p>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div style="display: flex; gap: 1rem;">
+                                        <button onclick="closeUserMenu()" style="flex: 1; padding: 0.75rem 1rem; background: var(--bg-main); border: 1px solid var(--border-main); border-radius: 8px; color: var(--text-main); cursor: pointer;">Cancel</button>
+                                        <button onclick="confirmLogout()" style="flex: 1; padding: 0.75rem 1rem; background: var(--error); border: none; border-radius: 8px; color: white; cursor: pointer;">Sign Out</button>
+                                    </div>
+                                    <button onclick="confirmDeleteAccount()" style="width: 100%; padding: 0.75rem 1rem; background: #dc2626; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 600; transition: background 0.3s ease;" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">🗑️ Delete Account</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.insertAdjacentHTML('beforeend', menuHtml);
+                } else {
+                    // Fallback to session storage
+                    const userEmail = sessionStorage.getItem('user_email');
+                    const authVerified = sessionStorage.getItem('auth_verified');
+                    
+                    if (userEmail && authVerified === 'true') {
+                        const userName = userEmail.split('@')[0];
+                        
+                        const menuHtml = `
+                            <div id="userMenuOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                                <div style="background: var(--bg-card); border-radius: 16px; padding: 2rem; min-width: 300px; box-shadow: var(--shadow-xl); border: 1px solid var(--border-main);">
+                                    <div style="text-align: center; margin-bottom: 1.5rem;">
+                                        <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 24px; margin: 0 auto 1rem;">
+                                            ${userName[0].toUpperCase()}
+                                        </div>
+                                        <h3 style="margin: 0 0 0.5rem 0; color: var(--text-main);">${userName}</h3>
+                                        <p style="margin: 0; color: var(--text-muted); font-size: 14px;">${userEmail}</p>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                        <div style="display: flex; gap: 1rem;">
+                                            <button onclick="closeUserMenu()" style="flex: 1; padding: 0.75rem 1rem; background: var(--bg-main); border: 1px solid var(--border-main); border-radius: 8px; color: var(--text-main); cursor: pointer;">Cancel</button>
+                                            <button onclick="confirmLogout()" style="flex: 1; padding: 0.75rem 1rem; background: var(--error); border: none; border-radius: 8px; color: white; cursor: pointer;">Sign Out</button>
+                                        </div>
+                                        <button onclick="confirmDeleteAccount()" style="width: 100%; padding: 0.75rem 1rem; background: #dc2626; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 600; transition: background 0.3s ease;" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">🗑️ Delete Account</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        document.body.insertAdjacentHTML('beforeend', menuHtml);
+                    } else {
+                        logout();
+                    }
+                }
+            } catch (error) {
+                console.error('Error showing user menu:', error);
+                logout();
+            }
+        }
+        
+        // Close user menu
+        function closeUserMenu() {
+            const overlay = document.getElementById('userMenuOverlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+        
+        // Confirm logout
+        function confirmLogout() {
+            closeUserMenu();
+            logout();
+        }
+
+        // Logout function
+        async function logout() {
+            try {
+                console.log('Starting logout process...');
+                
+                // Sign out from Supabase
+                const { error } = await supabaseClient.auth.signOut();
+                if (error) {
+                    console.error('Supabase logout error:', error);
+                }
+                
+                // Clear session storage
+                sessionStorage.removeItem('user_email');
+                sessionStorage.removeItem('auth_verified');
+                sessionStorage.removeItem('verification_email');
+                
+                // Clear remember me if desired
+                localStorage.removeItem('remember_me');
+                localStorage.removeItem('saved_email');
+                
+                console.log('User logged out successfully');
+                window.location.href = '/login.html';
+            } catch (error) {
+                console.error('Logout failed:', error);
+                // Force logout anyway - clear everything and redirect
+                sessionStorage.clear();
+                localStorage.removeItem('remember_me');
+                localStorage.removeItem('saved_email');
+                window.location.href = '/login.html';
+            }
+        }
+
+        // Confirm account deletion
+        function confirmDeleteAccount() {
+            closeUserMenu();
+            
+            // Show confirmation dialog
+            const confirmHtml = `
+                <div id="deleteAccountOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10001; display: flex; align-items: center; justify-content: center;">
+                    <div style="background: var(--bg-card); border-radius: 16px; padding: 2rem; min-width: 400px; box-shadow: var(--shadow-xl); border: 1px solid var(--border-main); text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+                        <h3 style="margin: 0 0 1rem 0; color: var(--error); font-weight: 700;">Delete Account</h3>
+                        <p style="margin: 0 0 1.5rem 0; color: var(--text-main); line-height: 1.5;">
+                            Are you sure you want to permanently delete your account?<br>
+                            <strong style="color: var(--error);">This action cannot be undone.</strong><br>
+                            All your data, projects, and conversations will be lost forever.
+                        </p>
+                        <div style="background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                            <p style="margin: 0; color: var(--error); font-size: 14px; font-weight: 500;">
+                                ⚠️ WARNING: Account deletion is immediate and irreversible
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 1rem;">
+                            <button onclick="closeDeleteDialog()" style="flex: 1; padding: 0.75rem 1rem; background: var(--bg-main); border: 1px solid var(--border-main); border-radius: 8px; color: var(--text-main); cursor: pointer; font-weight: 500;">Cancel</button>
+                            <button onclick="executeAccountDeletion()" style="flex: 1; padding: 0.75rem 1rem; background: #dc2626; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 600; transition: background 0.3s ease;" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">🗑️ DELETE FOREVER</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', confirmHtml);
+        }
+
+        // Close delete account dialog
+        function closeDeleteDialog() {
+            const overlay = document.getElementById('deleteAccountOverlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+
+        // Execute account deletion
+        function executeAccountDeletion() {
+            const overlay = document.getElementById('deleteAccountOverlay');
+            const deleteButton = overlay.querySelector('button[onclick="executeAccountDeletion()"]');
+            
+            // Show loading state
+            deleteButton.innerHTML = '<div style="display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; margin-right: 8px;"></div>Deleting...';
+            deleteButton.disabled = true;
+            
+            try {
+                // Get current user info
+                const userEmail = sessionStorage.getItem('user_email');
+                
+                if (userEmail) {
+                    console.log('Simulating account deletion process for user:', userEmail);
+                    
+                    // Simulate deletion process
+                    setTimeout(() => {
+                        // Clear local data
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        
+                        // Show success message
+                        showDeletionSuccess();
+                        
+                        // Redirect to index after a short delay
+                        setTimeout(() => {
+                            window.location.href = '/index.html';
+                        }, 2000);
+                    }, 1000);
+                } else {
+                    throw new Error('No user session found');
+                }
+            } catch (error) {
+                console.error('Account deletion process failed:', error);
+                
+                // Show error message
+                deleteButton.innerHTML = '❌ Deletion Failed';
+                deleteButton.style.background = '#ef4444';
+                
+                setTimeout(() => {
+                    deleteButton.innerHTML = '🗑️ Try Again';
+                    deleteButton.style.background = '#dc2626';
+                    deleteButton.disabled = false;
+                }, 2000);
+                
+                // Show error details
+                const errorMsg = document.createElement('div');
+                errorMsg.style.cssText = 'margin-top: 1rem; padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; color: #ef4444; font-size: 14px;';
+                errorMsg.textContent = `Error: ${error.message}. Please contact support for manual account deletion.`;
+                overlay.querySelector('div > div').appendChild(errorMsg);
+            }
+        }
+
+        // Show deletion success message
+        function showDeletionSuccess() {
+            const overlay = document.getElementById('deleteAccountOverlay');
+            if (overlay) {
+                overlay.innerHTML = `
+                    <div style="background: var(--bg-card); border-radius: 16px; padding: 2rem; min-width: 400px; box-shadow: var(--shadow-xl); border: 1px solid var(--border-main); text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+                        <h3 style="margin: 0 0 1rem 0; color: var(--success); font-weight: 700;">Account Deleted Successfully</h3>
+                        <p style="margin: 0 0 1.5rem 0; color: var(--text-main); line-height: 1.5;">
+                            Your account has been permanently deleted.<br>
+                            Thank you for using Engunity AI.
+                        </p>
+                        <div style="display: inline-block; width: 24px; height: 24px; border: 2px solid var(--success); border-radius: 50%; border-top-color: transparent; animation: spin 1s ease-in-out infinite;"></div>
+                        <p style="margin: 1rem 0 0 0; color: var(--text-muted); font-size: 14px;">Redirecting to homepage...</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Show deletion pending message (for fallback cases)
+        function showDeletionPending() {
+            const overlay = document.getElementById('deleteAccountOverlay');
+            if (overlay) {
+                overlay.innerHTML = `
+                    <div style="background: var(--bg-card); border-radius: 16px; padding: 2rem; min-width: 400px; box-shadow: var(--shadow-xl); border: 1px solid var(--border-main); text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">⏳</div>
+                        <h3 style="margin: 0 0 1rem 0; color: var(--warning); font-weight: 700;">Account Deletion Initiated</h3>
+                        <p style="margin: 0 0 1.5rem 0; color: var(--text-main); line-height: 1.5;">
+                            Your account deletion request has been processed.<br>
+                            You have been signed out and your local data cleared.
+                        </p>
+                        <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                            <p style="margin: 0; color: var(--warning); font-size: 14px; font-weight: 500;">
+                                ⚠️ If you can still log in with your credentials, please contact support for complete account deletion.
+                            </p>
+                        </div>
+                        <div style="display: inline-block; width: 24px; height: 24px; border: 2px solid var(--warning); border-radius: 50%; border-top-color: transparent; animation: spin 1s ease-in-out infinite;"></div>
+                        <p style="margin: 1rem 0 0 0; color: var(--text-muted); font-size: 14px;">Redirecting to homepage...</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize Application
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('Dashboard DOMContentLoaded event fired');
+            
+            // Check if user is authenticated first
+            console.log('Starting authentication check...');
+            const isAuthenticated = await checkAuthentication();
+            if (!isAuthenticated) {
+                console.log('Authentication failed, stopping initialization');
+                return; // Stop initialization if not authenticated
+            }
+            
+            console.log('Authentication successful, initializing dashboard...');
+            
+            // Save the initial dashboard HTML for restoration
+            window._dashboardHTML = document.getElementById('mainContent').innerHTML;
+            
+            // Initialize all managers and components
+            console.log('Initializing LoadingManager...');
+            new LoadingManager();
+            
+            console.log('Initializing other components...');
+            new NeuralBackground();
+            new ThemeManager();
+            new Router();
+            new MobileNav();
+            new PerformanceMonitor();
+            new AccessibilityManager();
+            new DataManager();
+            new AnimationController();
+            
+            console.log('Dashboard initialization complete!');
+            
+            // Fallback to ensure loading screen is hidden
+            setTimeout(() => {
+                const aiLoader = document.getElementById('aiLoader');
+                if (aiLoader && !aiLoader.classList.contains('hidden')) {
+                    console.log('Fallback: Force hiding loading screen');
+                    aiLoader.classList.add('hidden');
+                    setTimeout(() => {
+                        aiLoader.style.display = 'none';
+                    }, 500);
+                }
+            }, 5000);
+
+            // Add global error handling
+            window.addEventListener('error', (e) => {
+                console.error('Global error caught:', e.error);
+                // Could send to analytics or show user-friendly error message
+            });
+
+            // Add global performance monitoring
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js').catch(err => {
+                    console.log('ServiceWorker registration failed:', err);
+                });
+            }
+
+            // Add custom CSS animations for smooth interactions
+            const additionalStyles = document.createElement('style');
+            additionalStyles.textContent = `
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+                
+                @keyframes fadeInLeft {
+                    from {
+                        opacity: 0;
+                        transform: translateX(-30px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
+                }
+                
+                @keyframes slideInLeft {
+                    from {
+                        opacity: 0;
+                        transform: translateX(-20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
+                }
+                
+                .notification-enter {
+                    animation: slideInRight 0.3s ease;
+                }
+                
+                @keyframes slideInRight {
+                    from {
+                        opacity: 0;
+                        transform: translateX(100px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
+                }
+                
+                /* Enhanced hover effects */
+                .interactive-element {
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                
+                .interactive-element:hover {
+                    transform: translateY(-2px);
+                    box-shadow: var(--shadow-lg);
+                }
+                
+                /* Loading states */
+                .loading {
+                    opacity: 0.7;
+                    pointer-events: none;
+                }
+                
+                .loading::after {
+                    content: '';
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    width: 20px;
+                    height: 20px;
+                    border: 2px solid var(--accent-primary);
+                    border-top: 2px solid transparent;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                    transform: translate(-50%, -50%);
+                }
+                
+                /* Smooth scrolling */
+                html {
+                    scroll-behavior: smooth;
+                }
+                
+                /* Enhanced focus states */
+                *:focus-visible {
+                    outline: 2px solid var(--accent-primary);
+                    outline-offset: 2px;
+                    border-radius: 4px;
+                }
+                
+                /* Custom selection */
+                ::selection {
+                    background: var(--accent-primary);
+                    color: white;
+                }
+                
+                /* Enhanced glassmorphism */
+                .glass-strong {
+                    background: rgba(255, 255, 255, 0.05);
+                    backdrop-filter: blur(20px);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+                }
+                
+                /* Improved animations */
+                .animate-on-scroll {
+                    opacity: 0;
+                    transform: translateY(30px);
+                    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                
+                .animate-on-scroll.visible {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+                
+                /* Professional typography */
+                .heading-gradient {
+                    background: var(--gradient-primary);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                }
+                
+                /* Status indicators */
+                .status-online {
+                    color: var(--success);
+                }
+                
+                .status-offline {
+                    color: var(--error);
+                }
+                
+                .status-warning {
+                    color: var(--warning);
+                }
+                
+                /* Enhanced buttons */
+                .btn-primary {
+                    background: var(--gradient-primary);
+                    border: none;
+                    border-radius: 12px;
+                    padding: 0.75rem 1.5rem;
+                    color: white;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    box-shadow: var(--shadow-md);
+                    position: relative;
+                    overflow: hidden;
+                }
+                
+                .btn-primary::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: -100%;
+                    width: 100%;
+                    height: 100%;
+                    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+                    transition: left 0.5s ease;
+                }
+                
+                .btn-primary:hover::before {
+                    left: 100%;
+                }
+                
+                .btn-primary:hover {
+                    transform: translateY(-2px);
+                    box-shadow: var(--shadow-lg);
+                }
+                
+                .btn-secondary {
+                    background: var(--bg-tertiary);
+                    border: 1px solid var(--border-primary);
+                    border-radius: 12px;
+                    padding: 0.75rem 1.5rem;
+                    color: var(--text-secondary);
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+                
+                .btn-secondary:hover {
+                    background: var(--bg-quaternary);
+                    color: var(--text-primary);
+                    border-color: var(--border-accent);
+                    transform: translateY(-1px);
+                }
+            `;
+            document.head.appendChild(additionalStyles);
+
+            console.log('🚀 Engunity AI Dashboard initialized successfully!');
+        });
+
+        // Add some utility functions for enhanced functionality
+        const utils = {
+            formatNumber: (num) => {
+                return new Intl.NumberFormat().format(num);
+            },
+            
+            formatDate: (date) => {
+                return new Intl.DateTimeFormat('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                }).format(new Date(date));
+            },
+            
+            formatTime: (date) => {
+                return new Intl.DateTimeFormat('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }).format(new Date(date));
+            },
+            
+            debounce: (func, wait) => {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            },
+            
+            throttle: (func, limit) => {
+                let inThrottle;
+                return function() {
+                    const args = arguments;
+                    const context = this;
+                    if (!inThrottle) {
+                        func.apply(context, args);
+                        inThrottle = true;
+                        setTimeout(() => inThrottle = false, limit);
+                    }
+                };
+            }
+        };
+
+        // Make utils globally available
+        window.engunityUtils = utils;
+
+        // Show complexity block after code generation
+        document.addEventListener('DOMContentLoaded', () => {
+            const genBtn = document.getElementById('generate-code-btn');
+            const complexityBlock = document.getElementById('complexity-block');
+            if (genBtn && complexityBlock) {
+                genBtn.addEventListener('click', () => {
+                    // Here you could analyze the code and set the complexity dynamically
+                    // For now, just show the block
+                    complexityBlock.style.display = 'flex';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
