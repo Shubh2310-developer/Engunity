@@ -18,7 +18,10 @@ class Settings(BaseSettings):
     supabase_service_role_key: str = ""
     
     # Database Configuration (for direct PostgreSQL access if needed)
-    database_url: str = ""
+    database_url: str = "sqlite:///./engunity.db"
+    
+    # Security
+    SECRET_KEY: str = "your-secret-key-change-in-production"
     
     # CORS
     allowed_hosts: List[str] = ["*"]
@@ -43,3 +46,7 @@ class Settings(BaseSettings):
 
 # Create settings instance
 settings = Settings()
+
+def get_settings() -> Settings:
+    """Get settings instance."""
+    return settings

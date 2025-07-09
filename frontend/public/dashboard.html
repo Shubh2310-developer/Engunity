@@ -133,20 +133,64 @@
 
         .ai-core {
             position: absolute;
-            width: 60px;
-            height: 60px;
-            background: radial-gradient(circle, #3b82f6 0%, #1e40af 50%, #1d4ed8 100%);
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
             border-radius: 50%;
-            box-shadow: 0 0 40px rgba(59, 130, 246, 0.8), 0 0 80px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 0 40px rgba(139, 92, 246, 0.8), 0 0 80px rgba(6, 182, 212, 0.4);
             animation: aiCorePulse 2s ease-in-out infinite alternate;
             z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .ai-core::before {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #a855f7 0%, #0891b2 100%);
+            border-radius: 50%;
+            animation: aiCoreRotate 3s linear infinite;
+        }
+        
+        .ai-core::after {
+            content: 'ENGUNITY AI';
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            font-weight: 700;
+            color: #f1f5f9;
+            letter-spacing: 1px;
+            text-align: center;
+            z-index: 11;
+        }
+        
+        @keyframes aiCoreRotate {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
         }
 
         @keyframes aiCorePulse {
             0% {
                 transform: scale(1);
-                box-shadow: 0 0 40px rgba(59, 130, 246, 0.8), 0 0 80px rgba(59, 130, 246, 0.4);
+                box-shadow: 0 0 40px rgba(139, 92, 246, 0.8), 0 0 80px rgba(6, 182, 212, 0.4);
             }
+            100% {
+                transform: scale(1.1);
+                box-shadow: 0 0 60px rgba(139, 92, 246, 1), 0 0 120px rgba(6, 182, 212, 0.6);
+            }
+        }
+        
+        @keyframes dashboardLogoSpin {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
             100% {
                 transform: scale(1.1);
                 box-shadow: 0 0 60px rgba(59, 130, 246, 1), 0 0 120px rgba(59, 130, 246, 0.6);
@@ -1373,7 +1417,9 @@
                     </svg>
                 </button>
                 <a href="/" class="logo">
-                    <div class="logo-icon"></div>
+                    <div class="logo-icon" style="width: 32px; height: 32px; background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;">
+                        <div style="width: 20px; height: 20px; background: linear-gradient(135deg, #a855f7 0%, #0891b2 100%); border-radius: 50%; animation: dashboardLogoSpin 3s linear infinite;"></div>
+                    </div>
                     <span>Engunity AI</span>
                 </a>
             </div>
@@ -1469,6 +1515,12 @@
                         <a href="#version" class="sidebar-link" data-route="version" role="menuitem">
                             <span class="sidebar-icon">🧾</span>
                             <span>Version Control</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="javascript:void(0)" class="sidebar-link" onclick="navigateToGitHub()" role="menuitem">
+                            <span class="sidebar-icon">🐙</span>
+                            <span>GitHub Repos</span>
                         </a>
                     </li>
                 </ul>
@@ -2093,25 +2145,25 @@ print(fibonacci(10))
                                 <div style="font-size: 3rem; margin-bottom: 1rem;">📝</div>
                                 <h3 style="margin-bottom: 1rem; font-weight: 700;">Paper Summarization</h3>
                                 <p style="color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.6;">Generate comprehensive summaries of academic papers with key insights and methodologies</p>
-                                <button style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Start Summarizing</button>
+                                <button onclick="navigateToResearchTool('paper-summarization')" style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Start Summarizing</button>
                             </div>
                             <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; text-align: center; backdrop-filter: var(--blur-lg); transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-xl)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
                                 <div style="font-size: 3rem; margin-bottom: 1rem;">🔗</div>
                                 <h3 style="margin-bottom: 1rem; font-weight: 700;">Citation Formatter</h3>
                                 <p style="color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.6;">Format citations in APA, MLA, IEEE, and Chicago styles with AI assistance</p>
-                                <button style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Format Citations</button>
+                                <button onclick="navigateToResearchTool('citation-formatter')" style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Format Citations</button>
                             </div>
                             <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; text-align: center; backdrop-filter: var(--blur-lg); transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-xl)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
                                 <div style="font-size: 3rem; margin-bottom: 1rem;">📚</div>
                                 <h3 style="margin-bottom: 1rem; font-weight: 700;">Literature Review</h3>
                                 <p style="color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.6;">Analyze multiple papers to identify research gaps and synthesize findings</p>
-                                <button style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Start Review</button>
+                                <button onclick="navigateToResearchTool('literature-review')" style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Start Review</button>
                             </div>
                             <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; text-align: center; backdrop-filter: var(--blur-lg); transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='var(--shadow-xl)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
                                 <div style="font-size: 3rem; margin-bottom: 1rem;">✍️</div>
                                 <h3 style="margin-bottom: 1rem; font-weight: 700;">Writing Assistant</h3>
                                 <p style="color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.6;">Get help with academic writing, paraphrasing, and manuscript preparation</p>
-                                <button style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Open Editor</button>
+                                <button onclick="navigateToResearchTool('writing-assistant')" style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Open Editor</button>
                             </div>
                         </div>
                         <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; backdrop-filter: var(--blur-lg);">
@@ -2627,6 +2679,49 @@ First 5 rows:
                                     <p style="color: var(--text-secondary); margin-bottom: 1rem;">Change your preferences and settings to suit your needs</p>
                                     <button style="background: var(--gradient-primary); border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Customize Settings</button>
                                 </div>
+                                
+                                <!-- API Key Management Section -->
+                                <div style="margin-bottom: 2rem;">
+                                    <h4 style="margin-bottom: 1rem; font-weight: 600;">API Key Management</h4>
+                                    <div style="border: 2px dashed var(--border-primary); border-radius: 12px; padding: 2rem; transition: all 0.3s ease;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor='var(--border-primary)'">
+                                        <div style="font-size: 3rem; margin-bottom: 1rem; text-align: center;">🔑</div>
+                                        <h4 style="margin-bottom: 0.5rem; text-align: center;">LLM Provider Keys</h4>
+                                        <p style="color: var(--text-secondary); margin-bottom: 1.5rem; text-align: center;">Manage your API keys for different LLM providers</p>
+                                        
+                                        <div id="apiKeysList" style="margin-bottom: 1.5rem;">
+                                            <!-- API keys will be loaded here -->
+                                        </div>
+                                        
+                                        <div style="border-top: 1px solid var(--border-primary); padding-top: 1.5rem;">
+                                            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                                                <select id="providerSelect" style="flex: 1; background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 8px; padding: 0.75rem; color: var(--text-primary);">
+                                                    <option value="">Select Provider</option>
+                                                    <option value="openai">OpenAI</option>
+                                                    <option value="gemini">Google Gemini</option>
+                                                    <option value="together">Together.ai</option>
+                                                    <option value="openrouter">OpenRouter</option>
+                                                    <option value="huggingface">Hugging Face</option>
+                                                </select>
+                                                <input type="text" id="apiKeyInput" placeholder="Enter API key..." style="flex: 2; background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 8px; padding: 0.75rem; color: var(--text-primary);">
+                                            </div>
+                                            <div style="display: flex; gap: 1rem; justify-content: center;">
+                                                <button onclick="saveApiKey()" style="background: var(--gradient-primary); border: none; border-radius: 8px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Save API Key</button>
+                                                <button onclick="loadApiKeys()" style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 8px; padding: 0.75rem 1.5rem; color: var(--text-primary); cursor: pointer; font-weight: 600;">Refresh</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- GitHub Integration Section -->
+                                <div style="margin-bottom: 2rem;">
+                                    <h4 style="margin-bottom: 1rem; font-weight: 600;">GitHub Integration</h4>
+                                    <div style="border: 2px dashed var(--border-primary); border-radius: 12px; padding: 2rem; text-align: center; transition: all 0.3s ease; cursor: pointer;" onclick="navigateToGitHub()" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor='var(--border-primary)'">
+                                        <div style="font-size: 3rem; margin-bottom: 1rem;">🐙</div>
+                                        <h4 style="margin-bottom: 0.5rem;">GitHub Repositories</h4>
+                                        <p style="color: var(--text-secondary); margin-bottom: 1rem;">Connect and manage your GitHub repositories</p>
+                                        <button style="background: #24292e; border: none; border-radius: 10px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600;">Manage GitHub</button>
+                                    </div>
+                                </div>
                                 <div>
                                     <h4 style="margin-bottom: 1rem; font-weight: 600;">Current Settings</h4>
                                     <div style="background: var(--bg-tertiary); border-radius: 10px; padding: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
@@ -2686,6 +2781,20 @@ First 5 rows:
                         </div>
                     </div>
                 `;
+                
+                // Load API keys after the HTML is rendered
+                setTimeout(async () => {
+                    const token = await getAuthToken();
+                    if (token) {
+                        loadApiKeys();
+                    } else {
+                        console.log('No auth token available for API keys');
+                        const container = document.getElementById('apiKeysList');
+                        if (container) {
+                            container.innerHTML = '<p style="text-align: center; color: var(--error); font-style: italic;">Please log in to manage API keys</p>';
+                        }
+                    }
+                }, 100);
             }
         }
 
@@ -3327,7 +3436,242 @@ First 5 rows:
                 errorMsg.style.cssText = 'margin-top: 1rem; padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; color: #ef4444; font-size: 14px;';
                 errorMsg.textContent = `Error: ${error.message}. Please contact support for manual account deletion.`;
                 overlay.querySelector('div > div').appendChild(errorMsg);
+
             }
+        }
+
+        // Navigation function for research tools
+        function navigateToResearchTool(toolName) {
+            // Store the current page state to enable back navigation
+            sessionStorage.setItem('previousPage', 'research-tools');
+            
+            // Navigate to the research tool page
+            window.location.href = `pages/${toolName}.html`;
+        }
+
+        // Navigation function for GitHub integration
+        function navigateToGitHub() {
+            // Navigate to GitHub integration page
+            window.location.href = 'pages/github-integration.html';
+        }
+
+        // API Key Management Functions
+        async function loadApiKeys() {
+            try {
+                const token = await getAuthToken();
+                console.log('Token for API keys:', token ? `${token.substring(0, 20)}...` : 'null');
+                if (!token) {
+                    showNotification('Please log in to manage API keys', 'error');
+                    return;
+                }
+                
+                const response = await fetch('/api/v1/api-keys/', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                console.log('API keys response status:', response.status);
+                if (response.ok) {
+                    const apiKeys = await response.json();
+                    displayApiKeys(apiKeys);
+                } else {
+                    const errorText = await response.text();
+                    console.error('Failed to load API keys:', errorText);
+                    showNotification('Failed to load API keys', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading API keys:', error);
+                showNotification('Error loading API keys', 'error');
+            }
+        }
+
+        function displayApiKeys(apiKeys) {
+            const container = document.getElementById('apiKeysList');
+            if (!container) return;
+
+            if (apiKeys.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); font-style: italic;">No API keys configured yet</p>';
+                return;
+            }
+
+            container.innerHTML = apiKeys.map(key => `
+                <div style="background: var(--bg-tertiary); border-radius: 10px; padding: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 1.25rem;">${getProviderIcon(key.provider)}</span>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; margin-bottom: 0.25rem;">${key.provider_info.name || key.provider}</div>
+                        <div style="font-size: 0.875rem; color: var(--text-secondary);">
+                            ${key.model_name || 'Default model'} • 
+                            ${key.is_valid ? 'Valid' : 'Invalid'} • 
+                            ${key.usage_count || 0} uses
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        ${key.is_default ? '<span style="background: var(--success); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">Default</span>' : ''}
+                        <button onclick="setDefaultProvider(${key.id})" style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 4px; padding: 0.25rem 0.5rem; cursor: pointer; font-size: 0.75rem;" ${key.is_default ? 'disabled' : ''}>
+                            ${key.is_default ? 'Default' : 'Set Default'}
+                        </button>
+                        <button onclick="deleteApiKey(${key.id})" style="background: var(--error); color: white; border: none; border-radius: 4px; padding: 0.25rem 0.5rem; cursor: pointer; font-size: 0.75rem;">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getProviderIcon(provider) {
+            const icons = {
+                'openai': '🤖',
+                'gemini': '💎',
+                'together': '🤝',
+                'openrouter': '🌐',
+                'huggingface': '🤗'
+            };
+            return icons[provider] || '🔑';
+        }
+
+        async function saveApiKey() {
+            const provider = document.getElementById('providerSelect').value;
+            const apiKey = document.getElementById('apiKeyInput').value;
+
+            if (!provider || !apiKey) {
+                showNotification('Please select a provider and enter an API key', 'error');
+                return;
+            }
+
+            try {
+                const token = await getAuthToken();
+                if (!token) {
+                    showNotification('Please log in to save API keys', 'error');
+                    return;
+                }
+                
+                const response = await fetch('/api/v1/api-keys/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        provider: provider,
+                        api_key: apiKey,
+                        is_default: false
+                    })
+                });
+
+                if (response.ok) {
+                    showNotification('API key saved successfully', 'success');
+                    document.getElementById('providerSelect').value = '';
+                    document.getElementById('apiKeyInput').value = '';
+                    loadApiKeys();
+                } else {
+                    const error = await response.json();
+                    showNotification(error.detail || 'Failed to save API key', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving API key:', error);
+                showNotification('Error saving API key', 'error');
+            }
+        }
+
+        async function deleteApiKey(keyId) {
+            if (!confirm('Are you sure you want to delete this API key?')) return;
+
+            try {
+                const token = await getAuthToken();
+                if (!token) {
+                    showNotification('Please log in to delete API keys', 'error');
+                    return;
+                }
+                
+                const response = await fetch(`/api/v1/api-keys/${keyId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    showNotification('API key deleted successfully', 'success');
+                    loadApiKeys();
+                } else {
+                    showNotification('Failed to delete API key', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting API key:', error);
+                showNotification('Error deleting API key', 'error');
+            }
+        }
+
+        async function setDefaultProvider(keyId) {
+            try {
+                const token = await getAuthToken();
+                if (!token) {
+                    showNotification('Please log in to set default provider', 'error');
+                    return;
+                }
+                
+                const response = await fetch(`/api/v1/api-keys/${keyId}/set-default`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    showNotification('Default provider set successfully', 'success');
+                    loadApiKeys();
+                } else {
+                    showNotification('Failed to set default provider', 'error');
+                }
+            } catch (error) {
+                console.error('Error setting default provider:', error);
+                showNotification('Error setting default provider', 'error');
+            }
+        }
+
+        async function getAuthToken() {
+            // First check stored tokens
+            let token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+            
+            // If no token, try to get current session from Supabase
+            if (!token && typeof supabaseClient !== 'undefined') {
+                try {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    if (session?.access_token) {
+                        token = session.access_token;
+                        localStorage.setItem('auth_token', token);
+                        sessionStorage.setItem('auth_token', token);
+                    }
+                } catch (error) {
+                    console.error('Error getting session:', error);
+                }
+            }
+            
+            return token;
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                color: white;
+                font-weight: 600;
+                z-index: 10000;
+                background: ${type === 'success' ? 'var(--success)' : 'var(--error)'};
+                box-shadow: var(--shadow-lg);
+                animation: slideIn 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
         }
 
         // Show deletion success message
@@ -3424,12 +3768,7 @@ First 5 rows:
                 // Could send to analytics or show user-friendly error message
             });
 
-            // Add global performance monitoring
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js').catch(err => {
-                    console.log('ServiceWorker registration failed:', err);
-                });
-            }
+            // Service worker removed (sw.js not implemented)
 
             // Add custom CSS animations for smooth interactions
             const additionalStyles = document.createElement('style');

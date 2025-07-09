@@ -3,7 +3,20 @@
     "allow": [
       "Bash(grep:*)",
       "Bash(pip install:*)",
-      "Bash(python test_supabase_connection.py:*)"
+      "Bash(python test_supabase_connection.py:*)",
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(pkill:*)",
+      "Bash(kill:*)",
+      "Bash(alembic revision:*)",
+      "Bash(for file in *.py)",
+      "Bash(do if [[ \"$file\" != \"__init__.py\" ]])",
+      "Bash(then echo \"=== $file ===\")",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(python:*)",
+      "Bash(curl:*)",
+      "Bash(lsof:*)"
     ],
     "deny": []
   }

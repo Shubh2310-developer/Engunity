@@ -178,11 +178,11 @@
         }
 
         .logo {
-            width: 56px;
-            height: 56px;
+            width: 80px;
+            height: 80px;
             margin: 0 auto 24px;
-            background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
-            border-radius: 14px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -205,21 +205,27 @@
         .logo::before {
             content: '';
             position: absolute;
-            width: 60%;
-            height: 60%;
-            background: linear-gradient(45deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%);
+            width: 70%;
+            height: 70%;
+            background: linear-gradient(135deg, #a855f7 0%, #0891b2 100%);
             border-radius: 50%;
-            transform: rotate(45deg);
+            animation: logoRotate 3s linear infinite;
         }
         
         .logo::after {
             content: '';
             position: absolute;
-            width: 30%;
-            height: 30%;
-            background: linear-gradient(135deg, rgba(59,130,246,0.8) 0%, rgba(139,92,246,0.8) 100%);
+            width: 40%;
+            height: 40%;
+            background: linear-gradient(135deg, #c084fc 0%, #38bdf8 100%);
             border-radius: 50%;
             animation: logoPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes logoRotate {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
         }
         
         @keyframes logoPulse {
@@ -229,11 +235,13 @@
 
         .logo-text {
             color: white;
-            font-size: 20px;
+            font-size: 12px;
             font-weight: 700;
-            letter-spacing: -0.5px;
+            letter-spacing: 0.5px;
             position: relative;
             z-index: 2;
+            text-align: center;
+            line-height: 1.2;
         }
 
         .auth-title {
@@ -667,6 +675,7 @@
             <!-- Header -->
             <div class="auth-header">
                 <div class="logo">
+                    <div class="logo-text">ENGUNITY<br>AI</div>
                 </div>
                 <h1 class="auth-title">Welcome to Engunity AI</h1>
                 <p class="auth-subtitle">Sign in to access research, code, and insights.</p>
@@ -897,6 +906,25 @@
                     sessionStorage.setItem('user_email', email);
                     sessionStorage.setItem('auth_verified', 'true');
                     
+                    // Store access token for API calls
+                    if (data.session?.access_token) {
+                        localStorage.setItem('auth_token', data.session.access_token);
+                        sessionStorage.setItem('auth_token', data.session.access_token);
+                    }
+                    
+                    // Check if user has GitHub identity and store GitHub token
+                    const githubProvider = data.user.identities?.find(identity => identity.provider === 'github');
+                    if (githubProvider && data.session?.provider_token) {
+                        localStorage.setItem('github_token', data.session.provider_token);
+                        localStorage.setItem('github_user', JSON.stringify({
+                            login: githubProvider.identity_data.user_name,
+                            email: githubProvider.identity_data.email,
+                            avatar_url: githubProvider.identity_data.avatar_url,
+                            id: githubProvider.identity_data.sub,
+                            name: githubProvider.identity_data.full_name
+                        }));
+                    }
+                    
                     showToast('Login successful! Redirecting to dashboard...', 'success');
                     
                     // Redirect directly to dashboard
@@ -1002,7 +1030,7 @@
                     provider: 'github',
                     options: {
                         redirectTo: `${window.location.origin}/dashboard.html`,
-                        scopes: 'user:email'
+                        scopes: 'user:email repo'
                     }
                 });
 
@@ -1149,6 +1177,26 @@
                     const userEmail = session.user.email;
                     sessionStorage.setItem('user_email', userEmail);
                     sessionStorage.setItem('auth_verified', 'true');
+                    
+                    // Store access token for API calls
+                    if (session.access_token) {
+                        localStorage.setItem('auth_token', session.access_token);
+                        sessionStorage.setItem('auth_token', session.access_token);
+                    }
+                    
+                    // Check if user has GitHub identity and store GitHub token
+                    const githubProvider = session.user.identities?.find(identity => identity.provider === 'github');
+                    if (githubProvider && session.provider_token) {
+                        localStorage.setItem('github_token', session.provider_token);
+                        localStorage.setItem('github_user', JSON.stringify({
+                            login: githubProvider.identity_data.user_name,
+                            email: githubProvider.identity_data.email,
+                            avatar_url: githubProvider.identity_data.avatar_url,
+                            id: githubProvider.identity_data.sub,
+                            name: githubProvider.identity_data.full_name
+                        }));
+                    }
+                    
                     window.location.href = 'dashboard.html';
                 }
             } catch (error) {
@@ -1202,6 +1250,43 @@
                 if (e.altKey && e.key === 'Enter') {
                     e.preventDefault();
                     document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+                }
+            });
+
+            // Listen for auth state changes (OAuth redirects)
+            supabaseClient.auth.onAuthStateChange(async (event, session) => {
+                console.log('Auth state changed:', event, session);
+                
+                if (event === 'SIGNED_IN' && session) {
+                    // Store user info
+                    sessionStorage.setItem('user_email', session.user.email);
+                    sessionStorage.setItem('auth_verified', 'true');
+                    
+                    // Store access token for API calls
+                    if (session.access_token) {
+                        localStorage.setItem('auth_token', session.access_token);
+                        sessionStorage.setItem('auth_token', session.access_token);
+                    }
+                    
+                    // Check if user has GitHub identity and store GitHub token
+                    const githubProvider = session.user.identities?.find(identity => identity.provider === 'github');
+                    if (githubProvider && session.provider_token) {
+                        localStorage.setItem('github_token', session.provider_token);
+                        localStorage.setItem('github_user', JSON.stringify({
+                            login: githubProvider.identity_data.user_name,
+                            email: githubProvider.identity_data.email,
+                            avatar_url: githubProvider.identity_data.avatar_url,
+                            id: githubProvider.identity_data.sub,
+                            name: githubProvider.identity_data.full_name
+                        }));
+                    }
+                    
+                    showToast('Login successful! Redirecting to dashboard...', 'success');
+                    
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1500);
                 }
             });
         });

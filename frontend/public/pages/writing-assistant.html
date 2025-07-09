@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Writing Assistant</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            line-height: 1.7;
+            font-size: 16px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            padding: 1.5rem 0;
+        }
+
+        .header h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.025em;
+        }
+
+        .header p {
+            font-size: 1.125rem;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        /* Main Editor Container */
+        .editor-container {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid #334155;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 
+                        0 2px 4px -1px rgba(0, 0, 0, 0.2),
+                        0 0 0 1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .editor-container:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 
+                        0 4px 6px -2px rgba(0, 0, 0, 0.3),
+                        0 0 0 1px rgba(59, 130, 246, 0.3);
+            border-color: #475569;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            height: 24px;
+            background: #cbd5e1;
+            margin: 0 0.5rem;
+        }
+
+        .toolbar-btn {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .toolbar-btn:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+            color: #111827;
+        }
+
+        .toolbar-btn.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: #ffffff;
+        }
+
+        .primary-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border: none;
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .primary-btn:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px 0 rgba(59, 130, 246, 0.3);
+        }
+
+        .secondary-btn {
+            background: rgba(51, 65, 85, 0.6);
+            border: 1px solid #64748b;
+            color: #e2e8f0;
+        }
+
+        .secondary-btn:hover {
+            background: rgba(71, 85, 105, 0.8);
+            border-color: #94a3b8;
+        }
+
+        /* Editor Area */
+        .editor-wrapper {
+            position: relative;
+            min-height: 500px;
+        }
+
+        .editor {
+            width: 100%;
+            min-height: 500px;
+            padding: 2rem;
+            border: none;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            line-height: 1.7;
+            color: #e2e8f0;
+            background: rgba(15, 23, 42, 0.4);
+            resize: none;
+            overflow-y: auto;
+        }
+
+        .editor[contenteditable="true"] {
+            cursor: text;
+        }
+
+        .editor:focus {
+            outline: none;
+        }
+
+        .editor::selection {
+            background: rgba(59, 130, 246, 0.3);
+            color: #dbeafe;
+        }
+
+        .editor-placeholder {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            color: #64748b;
+            pointer-events: none;
+            font-size: 16px;
+            line-height: 1.7;
+            transition: opacity 0.2s ease;
+        }
+
+        .editor:not(:empty) + .editor-placeholder {
+            opacity: 0;
+        }
+
+        /* Writing Suggestions Tooltip */
+        .suggestion-tooltip {
+            position: absolute;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 
+                        0 4px 6px -2px rgba(0, 0, 0, 0.05),
+                        0 0 0 1px rgba(0, 0, 0, 0.05);
+            padding: 1rem;
+            max-width: 300px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-5px);
+            transition: all 0.2s ease;
+        }
+
+        .suggestion-tooltip.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .suggestion-header {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .suggestion-content {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .suggestion-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .suggestion-btn {
+            background: rgba(51, 65, 85, 0.8);
+            border: 1px solid #64748b;
+            border-radius: 6px;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .suggestion-btn:hover {
+            background: rgba(71, 85, 105, 0.9);
+        }
+
+        .suggestion-btn.primary {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: #ffffff;
+        }
+
+        .suggestion-btn.primary:hover {
+            background: #2563eb;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: rgba(15, 23, 42, 0.6);
+            border-top: 1px solid #475569;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .word-count {
+            font-weight: 500;
+        }
+
+        .save-status {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            color: #059669;
+        }
+
+        .save-indicator {
+            width: 6px;
+            height: 6px;
+            background: #059669;
+            border-radius: 50%;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.visible .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-description {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .modal-content {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-btn.cancel {
+            background: rgba(51, 65, 85, 0.8);
+            border: 1px solid #64748b;
+            color: #e2e8f0;
+        }
+
+        .modal-btn.cancel:hover {
+            background: rgba(71, 85, 105, 0.9);
+        }
+
+        .modal-btn.confirm {
+            background: #3b82f6;
+            border: 1px solid #3b82f6;
+            color: #ffffff;
+        }
+
+        .modal-btn.confirm:hover {
+            background: #2563eb;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.875rem;
+            }
+
+            .toolbar {
+                padding: 0.75rem 1rem;
+            }
+
+            .editor {
+                padding: 1.5rem;
+                min-height: 400px;
+            }
+
+            .editor-placeholder {
+                top: 1.5rem;
+                left: 1.5rem;
+            }
+
+            .toolbar-btn {
+                padding: 0.375rem 0.5rem;
+                font-size: 0.8125rem;
+            }
+        }
+
+        /* Smooth Animations */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <button onclick="goBack()" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; color: #3b82f6; padding: 0.5rem 1rem; margin-bottom: 1rem; cursor: pointer; font-size: 0.9rem; transition: all 0.3s ease;">← Back to Research Tools</button>
+            <h1>AI Writing Assistant</h1>
+            <p>Enhance your academic writing with intelligent suggestions and formatting</p>
+        </div>
+
+        <!-- Editor Container -->
+        <div class="editor-container">
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" onclick="formatText('bold')" title="Bold">
+                        <strong>B</strong>
+                    </button>
+                    <button class="toolbar-btn" onclick="formatText('italic')" title="Italic">
+                        <em>I</em>
+                    </button>
+                    <button class="toolbar-btn" onclick="formatText('underline')" title="Underline">
+                        <u>U</u>
+                    </button>
+                </div>
+
+                <div class="toolbar-separator"></div>
+
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" onclick="formatText('justifyLeft')" title="Align Left">
+                        ⇤
+                    </button>
+                    <button class="toolbar-btn" onclick="formatText('justifyCenter')" title="Center">
+                        ≡
+                    </button>
+                    <button class="toolbar-btn" onclick="formatText('justifyRight')" title="Align Right">
+                        ⇥
+                    </button>
+                </div>
+
+                <div class="toolbar-separator"></div>
+
+                <div class="toolbar-group">
+                    <button class="toolbar-btn primary-btn" onclick="paraphraseSelection()" title="Paraphrase Selected Text">
+                        ✨ Paraphrase Selection
+                    </button>
+                    <button class="toolbar-btn secondary-btn" onclick="showWritingSuggestions()" title="Get Writing Suggestions">
+                        💡 Suggestions
+                    </button>
+                </div>
+
+                <div class="toolbar-separator"></div>
+
+                <div class="toolbar-group">
+                    <button class="toolbar-btn secondary-btn" onclick="exportText()" title="Export to Text">
+                        📄 Export
+                    </button>
+                    <button class="toolbar-btn secondary-btn" onclick="copyToClipboard()" title="Copy to Clipboard">
+                        📋 Copy
+                    </button>
+                </div>
+            </div>
+
+            <!-- Editor Area -->
+            <div class="editor-wrapper">
+                <div class="editor" id="editor" contenteditable="true" spellcheck="true"></div>
+                <div class="editor-placeholder" id="placeholder">
+                    Start writing your academic paper here... 
+                    
+                    Try selecting text and clicking "Paraphrase Selection" to see AI improvements in action.
+                </div>
+
+                <!-- Writing Suggestions Tooltip -->
+                <div class="suggestion-tooltip" id="suggestionTooltip">
+                    <div class="suggestion-header">
+                        💡 Writing Suggestion
+                    </div>
+                    <div class="suggestion-content" id="suggestionContent">
+                        Consider using more specific terminology to enhance academic rigor.
+                    </div>
+                    <div class="suggestion-actions">
+                        <button class="suggestion-btn primary" onclick="applySuggestion()">Apply</button>
+                        <button class="suggestion-btn" onclick="hideSuggestionTooltip()">Dismiss</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <div class="status-left">
+                    <span class="word-count" id="wordCount">0 words</span>
+                    <span>•</span>
+                    <span id="charCount">0 characters</span>
+                </div>
+                <div class="status-right">
+                    <div class="save-status">
+                        <div class="save-indicator"></div>
+                        <span>Auto-saved</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Export Document</div>
+                <div class="modal-description" id="modalDescription">Choose how you'd like to export your document</div>
+            </div>
+            <div class="modal-content" id="modalContent">
+                <p>Your document is ready to export. You can copy the formatted text or download it as a plain text file.</p>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+                <button class="modal-btn confirm" onclick="confirmExport()">Export</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let editor = document.getElementById('editor');
+        let placeholder = document.getElementById('placeholder');
+        let wordCount = document.getElementById('wordCount');
+        let charCount = document.getElementById('charCount');
+        let suggestionTooltip = document.getElementById('suggestionTooltip');
+        let modalOverlay = document.getElementById('modalOverlay');
+        let currentSelection = null;
+
+        // Sample academic improvement suggestions
+        const paraphraseDatabase = {
+            'the study shows': 'research demonstrates',
+            'it is important': 'it is crucial',
+            'many studies': 'numerous investigations',
+            'very important': 'of paramount significance',
+            'a lot of': 'substantial',
+            'big': 'significant',
+            'good': 'effective',
+            'bad': 'detrimental',
+            'shows': 'demonstrates',
+            'proves': 'establishes',
+            'says': 'indicates',
+            'thinks': 'postulates',
+            'uses': 'employs',
+            'helps': 'facilitates',
+            'makes': 'creates',
+            'gives': 'provides',
+            'gets': 'obtains',
+            'finds': 'identifies',
+            'looks at': 'examines'
+        };
+
+        const writingSuggestions = [
+            "Consider using more precise academic terminology",
+            "This sentence could benefit from stronger evidence",
+            "Try restructuring for better flow and clarity",
+            "Consider adding a transitional phrase here",
+            "This claim would benefit from citation support",
+            "Consider using active voice for stronger impact",
+            "This paragraph could use a stronger topic sentence",
+            "Consider breaking this into shorter sentences"
+        ];
+
+        // Initialize editor
+        function initializeEditor() {
+            editor.addEventListener('input', handleEditorInput);
+            editor.addEventListener('paste', handlePaste);
+            editor.addEventListener('keydown', handleKeyDown);
+            editor.addEventListener('mouseup', handleSelection);
+            editor.addEventListener('focus', () => {
+                placeholder.style.opacity = '0';
+            });
+            editor.addEventListener('blur', () => {
+                if (editor.textContent.trim() === '') {
+                    placeholder.style.opacity = '1';
+                }
+            });
+
+            // Initialize with sample content
+            editor.innerHTML = `
+                <p>Academic writing requires precision and clarity. The effectiveness of communication in scholarly discourse depends largely on the author's ability to convey complex ideas with appropriate terminology and structure.</p>
+                
+                <p>This AI writing assistant will help improve your academic writing by suggesting better word choices and identifying areas for enhancement. Select any text and click "Paraphrase Selection" to see improvements.</p>
+            `;
+            
+            updateWordCount();
+        }
+
+        // Handle editor input
+        function handleEditorInput() {
+            updateWordCount();
+            autoSave();
+        }
+
+        // Handle paste events
+        function handlePaste(e) {
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text');
+            const cleanText = text.replace(/\r?\n/g, '<br>');
+            document.execCommand('insertHTML', false, cleanText);
+        }
+
+        // Handle keyboard shortcuts
+        function handleKeyDown(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case 'b':
+                        e.preventDefault();
+                        formatText('bold');
+                        break;
+                    case 'i':
+                        e.preventDefault();
+                        formatText('italic');
+                        break;
+                    case 'u':
+                        e.preventDefault();
+                        formatText('underline');
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        autoSave();
+                        break;
+                }
+            }
+        }
+
+        // Handle text selection
+        function handleSelection() {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0 && !selection.isCollapsed) {
+                currentSelection = {
+                    range: selection.getRangeAt(0),
+                    text: selection.toString()
+                };
+            }
+        }
+
+        // Format text
+        function formatText(command) {
+            document.execCommand(command, false, null);
+            editor.focus();
+        }
+
+        // Paraphrase selected text
+        function paraphraseSelection() {
+            const selection = window.getSelection();
+            
+            if (!selection.rangeCount || selection.isCollapsed) {
+                showToast('Please select some text to paraphrase');
+                return;
+            }
+
+            const selectedText = selection.toString().toLowerCase();
+            const range = selection.getRangeAt(0);
+            
+            // Simple paraphrasing logic
+            let improvedText = selectedText;
+            
+            // Apply paraphrasing rules
+            for (const [original, replacement] of Object.entries(paraphraseDatabase)) {
+                const regex = new RegExp(original, 'gi');
+                improvedText = improvedText.replace(regex, replacement);
+            }
+
+            // Capitalize first letter
+            improvedText = improvedText.charAt(0).toUpperCase() + improvedText.slice(1);
+
+            // If no changes were made, provide a generic improvement
+            if (improvedText.toLowerCase() === selectedText.toLowerCase()) {
+                improvedText = enhanceAcademicLanguage(selectedText);
+            }
+
+            // Replace the selected text
+            range.deleteContents();
+            const textNode = document.createTextNode(improvedText);
+            range.insertNode(textNode);
+            
+            // Clear selection
+            selection.removeAllRanges();
+            
+            showToast('Text paraphrased successfully!');
+            updateWordCount();
+        }
+
+        // Enhance academic language
+        function enhanceAcademicLanguage(text) {
+            // Basic academic enhancement
+            let enhanced = text
+                .replace(/\bI think\b/gi, 'It is postulated that')
+                .replace(/\bI believe\b/gi, 'It is hypothesized that')
+                .replace(/\bobviously\b/gi, 'evidently')
+                .replace(/\bclearly\b/gi, 'demonstrably')
+                .replace(/\bbasically\b/gi, 'fundamentally')
+                .replace(/\ba lot\b/gi, 'substantially')
+                .replace(/\breally\b/gi, 'considerably');
+
+            return enhanced.charAt(0).toUpperCase() + enhanced.slice(1);
+        }
+
+        // Show writing suggestions
+        function showWritingSuggestions() {
+            const selection = window.getSelection();
+            let rect;
+            
+            if (selection.rangeCount > 0 && !selection.isCollapsed) {
+                rect = selection.getRangeAt(0).getBoundingClientRect();
+            } else {
+                // Show suggestion at cursor position
+                rect = editor.getBoundingClientRect();
+            }
+            
+            const suggestion = writingSuggestions[Math.floor(Math.random() * writingSuggestions.length)];
+            document.getElementById('suggestionContent').textContent = suggestion;
+            
+            suggestionTooltip.style.left = rect.left + 'px';
+            suggestionTooltip.style.top = (rect.bottom + 10) + 'px';
+            suggestionTooltip.classList.add('visible');
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                hideSuggestionTooltip();
+            }, 5000);
+        }
+
+        // Apply suggestion
+        function applySuggestion() {
+            hideSuggestionTooltip();
+            showToast('Suggestion noted! Keep writing.');
+        }
+
+        // Hide suggestion tooltip
+        function hideSuggestionTooltip() {
+            suggestionTooltip.classList.remove('visible');
+        }
+
+        // Update word count
+        function updateWordCount() {
+            const text = editor.textContent || editor.innerText || '';
+            const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+            const chars = text.length;
+            
+            wordCount.textContent = `${words} word${words !== 1 ? 's' : ''}`;
+            charCount.textContent = `${chars} character${chars !== 1 ? 's' : ''}`;
+        }
+
+        // Auto-save functionality
+        function autoSave() {
+            // Simulate auto-save
+            const saveStatus = document.querySelector('.save-status span');
+            saveStatus.textContent = 'Saving...';
+            
+            setTimeout(() => {
+                saveStatus.textContent = 'Auto-saved';
+            }, 1000);
+        }
+
+        // Export text
+        function exportText() {
+            const content = editor.innerHTML;
+            showModal('Export Document', 'Your document is ready to export.', () => {
+                downloadTextFile();
+            });
+        }
+
+        // Download text file
+        function downloadTextFile() {
+            const content = editor.textContent || editor.innerText || '';
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'academic-document.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('Document exported successfully!');
+        }
+
+        // Copy to clipboard
+        async function copyToClipboard() {
+            try {
+                const content = editor.textContent || editor.innerText || '';
+                await navigator.clipboard.writeText(content);
+                showToast('Content copied to clipboard!');
+            } catch (err) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = editor.textContent || editor.innerText || '';
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showToast('Content copied to clipboard!');
+            }
+        }
+
+        // Modal functions
+        function showModal(title, description, onConfirm) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalDescription').textContent = description;
+            modalOverlay.classList.add('visible');
+            
+            // Store the confirm callback
+            modalOverlay.confirmCallback = onConfirm;
+        }
+
+        function closeModal() {
+            modalOverlay.classList.remove('visible');
+        }
+
+        function confirmExport() {
+            if (modalOverlay.confirmCallback) {
+                modalOverlay.confirmCallback();
+            }
+            closeModal();
+        }
+
+        // Toast notification
+        function showToast(message) {
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #059669 0%, #047857 100%);
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+                z-index: 3000;
+                font-size: 0.875rem;
+                font-weight: 500;
+                opacity: 0;
+                transform: translateX(100%);
+                transition: all 0.3s ease;
+                backdrop-filter: blur(10px);
+            `;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+
+        // Click outside to close tooltip
+        document.addEventListener('click', (e) => {
+            if (!suggestionTooltip.contains(e.target) && 
+                !e.target.closest('.toolbar-btn')) {
+                hideSuggestionTooltip();
+            }
+        });
+
+        // Click outside to close modal
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                closeModal();
+            }
+        });
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeEditor);
+
+        // Back navigation function
+        function goBack() {
+            const previousPage = sessionStorage.getItem('previousPage');
+            if (previousPage === 'research-tools') {
+                window.location.href = '../dashboard.html#research';
+            } else {
+                window.history.back();
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Paper Summarizer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #e2e8f0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            letter-spacing: -0.025em;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .input-container {
+            position: relative;
+        }
+
+        .pdf-upload-section {
+            margin-top: 16px;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(148, 163, 184, 0.2);
+        }
+
+        .divider-text {
+            padding: 0 16px;
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .pdf-upload-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px dashed rgba(148, 163, 184, 0.3);
+            border-radius: 16px;
+            color: #94a3b8;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pdf-upload-btn:hover {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .pdf-icon {
+            width: 24px;
+            height: 24px;
+            color: currentColor;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 12px;
+            margin-top: 12px;
+        }
+
+        .file-name {
+            color: #22c55e;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .remove-file {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s ease;
+        }
+
+        .remove-file:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .label {
+            display: block;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #cbd5e1;
+            margin-bottom: 8px;
+        }
+
+        .textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 16px 20px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px solid rgba(148, 163, 184, 0.2);
+            border-radius: 16px;
+            color: #e2e8f0;
+            font-size: 1rem;
+            font-family: inherit;
+            line-height: 1.6;
+            resize: vertical;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .textarea:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .textarea::placeholder {
+            color: #64748b;
+        }
+
+        .button {
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.3);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-container {
+            margin-top: 32px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+            visibility: hidden;
+        }
+
+        .result-container.show {
+            opacity: 1;
+            transform: translateY(0);
+            visibility: visible;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .result-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .result-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .result-content {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            line-height: 1.7;
+            font-size: 1rem;
+            color: #cbd5e1;
+        }
+
+        .highlight {
+            background: rgba(59, 130, 246, 0.2);
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 24px;
+                margin: 10px;
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+            
+            .textarea {
+                min-height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button onclick="goBack()" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; color: #3b82f6; padding: 0.5rem 1rem; margin-bottom: 1rem; cursor: pointer; font-size: 0.9rem; transition: all 0.3s ease;">← Back to Research Tools</button>
+            <h1 class="title">AI Paper Summarizer</h1>
+            <p class="subtitle">Transform complex academic papers into clear, concise summaries</p>
+        </div>
+
+        <form id="summarizerForm">
+            <div class="form-group">
+                <label class="label" for="paperText">Paste your academic paper or abstract:</label>
+                <div class="input-container">
+                    <textarea 
+                        id="paperText" 
+                        class="textarea" 
+                        placeholder="Paste your research paper text, abstract, or any academic content here. The AI will analyze the content and generate a comprehensive summary highlighting key findings, methodology, and conclusions..."
+                        required
+                    ></textarea>
+                    <div class="pdf-upload-section">
+                        <div class="divider">
+                            <span class="divider-text">OR</span>
+                        </div>
+                        <label for="pdfFile" class="pdf-upload-btn">
+                            <svg class="pdf-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <polyline points="14,2 14,8 20,8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <polyline points="10,9 9,9 8,9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>Upload PDF Paper</span>
+                            <input type="file" id="pdfFile" accept=".pdf" style="display: none;">
+                        </label>
+                        <div class="file-info" id="fileInfo" style="display: none;">
+                            <span class="file-name" id="fileName"></span>
+                            <button type="button" class="remove-file" id="removeFile">×</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="button" id="generateBtn">
+                <span class="spinner" id="spinner"></span>
+                <span id="buttonText">Generate Summary</span>
+            </button>
+        </form>
+
+        <div class="result-container" id="resultContainer">
+            <div class="result-header">
+                <div class="result-icon">✓</div>
+                <h3 class="result-title">AI-Generated Summary</h3>
+            </div>
+            <div class="result-content" id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('summarizerForm');
+        const generateBtn = document.getElementById('generateBtn');
+        const buttonText = document.getElementById('buttonText');
+        const spinner = document.getElementById('spinner');
+        const resultContainer = document.getElementById('resultContainer');
+        const resultContent = document.getElementById('resultContent');
+        const paperText = document.getElementById('paperText');
+        const pdfFile = document.getElementById('pdfFile');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const removeFile = document.getElementById('removeFile');
+
+        let currentFile = null;
+
+        // Sample summaries for demonstration
+        const sampleSummaries = [
+            {
+                keywords: ["machine learning", "neural networks", "deep learning"],
+                summary: "This paper presents a comprehensive analysis of <span class='highlight'>deep neural networks</span> in natural language processing applications. The research demonstrates significant improvements in model accuracy through novel attention mechanisms and transformer architectures. Key findings include a 15% performance boost over existing baselines and reduced computational complexity. The methodology involves extensive experimentation on multiple datasets, with particular focus on <span class='highlight'>transfer learning</span> techniques. The conclusions suggest practical applications in real-world NLP systems and provide a foundation for future research in automated text understanding."
+            },
+            {
+                keywords: ["climate", "environmental", "sustainability"],
+                summary: "The study investigates the impact of <span class='highlight'>climate change</span> on urban sustainability initiatives across major metropolitan areas. Through comprehensive data analysis spanning five years, researchers identified critical patterns in resource consumption and environmental adaptation strategies. The paper highlights innovative approaches to <span class='highlight'>sustainable urban planning</span>, including green infrastructure implementation and carbon footprint reduction techniques. Results indicate that cities implementing integrated sustainability frameworks achieved 25% greater efficiency in resource utilization. The research provides actionable recommendations for policymakers and urban planners."
+            },
+            {
+                keywords: ["quantum", "computing", "algorithm"],
+                summary: "This research explores the theoretical foundations of <span class='highlight'>quantum computing algorithms</span> and their potential applications in cryptography and optimization problems. The paper introduces novel quantum circuit designs that demonstrate exponential speedup over classical algorithms for specific computational tasks. Key contributions include a new quantum error correction protocol and improved <span class='highlight'>quantum gate fidelity</span> measurements. Experimental validation using quantum simulators shows promising results for near-term quantum devices. The work advances our understanding of quantum computational complexity and provides practical insights for quantum software development."
+            }
+        ];
+
+        function generateSummary(text) {
+            // Simple keyword matching to select appropriate summary
+            const lowerText = text.toLowerCase();
+            let selectedSummary = sampleSummaries[0]; // default
+
+            for (const sample of sampleSummaries) {
+                if (sample.keywords.some(keyword => lowerText.includes(keyword))) {
+                    selectedSummary = sample;
+                    break;
+                }
+            }
+
+            return selectedSummary.summary;
+        }
+
+        // PDF file handling
+        pdfFile.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file && file.type === 'application/pdf') {
+                currentFile = file;
+                fileName.textContent = file.name;
+                fileInfo.style.display = 'flex';
+                
+                // Simulate PDF text extraction
+                try {
+                    const extractedText = await extractTextFromPDF(file);
+                    paperText.value = extractedText;
+                    paperText.dispatchEvent(new Event('input')); // Trigger auto-resize
+                } catch (error) {
+                    console.error('Error extracting text from PDF:', error);
+                    paperText.value = `Sample extracted text from "${file.name}":\n\nAbstract: This paper presents a novel approach to artificial intelligence research, focusing on advanced machine learning techniques and their applications in real-world scenarios. The methodology involves comprehensive data analysis and experimental validation across multiple domains.\n\nIntroduction: Recent advances in AI have demonstrated significant potential for solving complex problems. This research builds upon existing frameworks to propose innovative solutions that address current limitations in the field.\n\nMethodology: Our approach combines statistical analysis with deep learning algorithms to achieve improved performance metrics. The experimental design includes controlled testing environments and peer review validation.\n\nResults: The findings indicate substantial improvements over baseline models, with accuracy increases of up to 23% in benchmark tests. These results suggest practical applications for industry implementation.\n\nConclusion: This work contributes to the growing body of AI research and provides a foundation for future developments in the field.`;
+                    paperText.dispatchEvent(new Event('input'));
+                }
+            }
+        });
+
+        removeFile.addEventListener('click', () => {
+            currentFile = null;
+            pdfFile.value = '';
+            fileInfo.style.display = 'none';
+            paperText.value = '';
+            paperText.style.height = '200px';
+        });
+
+        // Simulate PDF text extraction (in a real app, you'd use PDF.js or similar)
+        async function extractTextFromPDF(file) {
+            // Simulate processing delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Return sample extracted text based on filename
+            const filename = file.name.toLowerCase();
+            
+            if (filename.includes('climate') || filename.includes('environment')) {
+                return `Extracted from PDF: "${file.name}"\n\nClimate Change and Urban Sustainability: A Comprehensive Analysis\n\nAbstract: This study examines the multifaceted relationship between climate change impacts and urban sustainability initiatives across major metropolitan areas. Through longitudinal analysis of environmental data and policy implementation, we identify critical factors influencing successful adaptation strategies.\n\nIntroduction: Urban areas contribute significantly to global greenhouse gas emissions while simultaneously facing increased vulnerability to climate-related risks. This research addresses the urgent need for integrated sustainability frameworks that can effectively mitigate environmental impacts while promoting economic growth.\n\nMethodology: Our research employs mixed-methods analysis, combining quantitative environmental metrics with qualitative policy assessment across 15 major cities worldwide. Data collection spans five years (2018-2023) and includes carbon footprint measurements, resource consumption patterns, and stakeholder interviews.\n\nResults: Cities implementing comprehensive sustainability frameworks achieved 25% greater efficiency in resource utilization compared to control groups. Key success factors include integrated transportation systems, green infrastructure development, and community engagement programs.\n\nConclusion: The findings provide actionable recommendations for policymakers and urban planners, emphasizing the importance of holistic approaches to climate adaptation and sustainable development.`;
+            } else if (filename.includes('quantum') || filename.includes('computing')) {
+                return `Extracted from PDF: "${file.name}"\n\nQuantum Computing Algorithms: Theoretical Foundations and Practical Applications\n\nAbstract: This research explores advanced quantum computing algorithms and their potential applications in cryptography, optimization, and machine learning. We present novel quantum circuit designs that demonstrate exponential speedup over classical algorithms for specific computational tasks.\n\nIntroduction: Quantum computing represents a paradigm shift in computational capability, offering the potential to solve previously intractable problems. This work focuses on developing practical quantum algorithms that can be implemented on near-term quantum devices.\n\nMethodology: Our approach combines theoretical algorithm design with experimental validation using quantum simulators and actual quantum hardware. We developed new quantum error correction protocols and improved gate fidelity measurements.\n\nResults: Experimental validation demonstrates significant performance improvements, with quantum algorithms showing exponential speedup for optimization problems and enhanced security in cryptographic applications. Error rates were reduced by 40% through our novel correction protocols.\n\nConclusion: This work advances our understanding of quantum computational complexity and provides practical insights for quantum software development, paving the way for real-world quantum computing applications.`;
+            } else {
+                return `Extracted from PDF: "${file.name}"\n\nMachine Learning in Natural Language Processing: Advanced Neural Network Architectures\n\nAbstract: This paper presents a comprehensive analysis of deep neural networks in natural language processing applications. We demonstrate significant improvements in model accuracy through novel attention mechanisms and transformer architectures.\n\nIntroduction: Natural language processing has experienced rapid advancement through deep learning techniques. This research addresses current limitations in language understanding by proposing innovative neural network architectures that better capture semantic relationships.\n\nMethodology: Our experimental framework involves extensive testing on multiple datasets, with particular focus on transfer learning techniques and attention mechanism optimization. We employed rigorous evaluation metrics and statistical validation procedures.\n\nResults: The proposed architecture achieved 15% performance improvement over existing baselines while reducing computational complexity by 30%. Cross-lingual evaluation demonstrated robust generalization capabilities across different language families.\n\nConclusion: These findings suggest practical applications in real-world NLP systems and provide a foundation for future research in automated text understanding and generation.`;
+            }
+        }
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            let text = paperText.value.trim();
+            
+            // Check if we have text from either textarea or PDF
+            if (!text && !currentFile) {
+                alert('Please paste text or upload a PDF file.');
+                return;
+            }
+            
+            // If no text but we have a file, extract text first
+            if (!text && currentFile) {
+                try {
+                    text = await extractTextFromPDF(currentFile);
+                    paperText.value = text;
+                } catch (error) {
+                    alert('Error processing PDF file. Please try again.');
+                    return;
+                }
+            }
+
+            // Show loading state
+            generateBtn.disabled = true;
+            buttonText.textContent = 'Analyzing...';
+            spinner.style.display = 'block';
+            resultContainer.classList.remove('show');
+
+            // Simulate AI processing delay
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Generate summary
+            const summary = generateSummary(text);
+            
+            // Show result
+            resultContent.innerHTML = summary;
+            resultContainer.classList.add('show');
+
+            // Reset button state
+            generateBtn.disabled = false;
+            buttonText.textContent = 'Generate Summary';
+            spinner.style.display = 'none';
+        });
+
+        // Auto-resize textarea
+        paperText.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.max(200, this.scrollHeight) + 'px';
+        });
+
+        // Back navigation function
+        function goBack() {
+            const previousPage = sessionStorage.getItem('previousPage');
+            if (previousPage === 'research-tools') {
+                window.location.href = '../dashboard.html#research';
+            } else {
+                window.history.back();
+            }
+        }
+    </script>
+</body>
+</html>

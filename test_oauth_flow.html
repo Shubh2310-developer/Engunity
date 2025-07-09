@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub OAuth Flow Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #f5f5f5; 
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .button { 
+            background: #4CAF50; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin: 5px; 
+        }
+        .button:hover { 
+            background: #45a049; 
+        }
+        .log { 
+            background: #f0f0f0; 
+            padding: 10px; 
+            border-radius: 4px; 
+            font-family: monospace; 
+            white-space: pre-wrap; 
+            max-height: 400px; 
+            overflow-y: auto; 
+            margin-top: 10px; 
+        }
+        .status { 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 4px; 
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GitHub OAuth Flow Test</h1>
+        
+        <div id="status" class="status info">
+            Ready to test GitHub OAuth flow
+        </div>
+        
+        <div>
+            <button class="button" onclick="testOAuth()">Test GitHub OAuth</button>
+            <button class="button" onclick="checkSession()">Check Current Session</button>
+            <button class="button" onclick="signOut()">Sign Out</button>
+            <button class="button" onclick="clearLogs()">Clear Logs</button>
+        </div>
+        
+        <div id="sessionInfo"></div>
+        
+        <h3>Debug Log</h3>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        // Configuration
+        const supabaseUrl = 'https://ckrtquhwlvpmpgrfemmb.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnRxdWh3bHZwbXBncmZlbW1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2NTE5MjQsImV4cCI6MjA2NTIyNzkyNH0.EKkuLjGdt3BJckM9XtboDCknG5ggt0xwcAI_jI8Al6k';
+        
+        const { createClient } = supabase;
+        const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.getElementById('log');
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+        
+        function setStatus(message, type = 'info') {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+        }
+        
+        async function testOAuth() {
+            log('Starting GitHub OAuth test...');
+            setStatus('Starting OAuth flow...', 'info');
+            
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'github',
+                    options: {
+                        redirectTo: window.location.href,
+                        scopes: 'repo user:email'
+                    }
+                });
+                
+                if (error) {
+                    log(`OAuth Error: ${error.message}`);
+                    setStatus(`OAuth Error: ${error.message}`, 'error');
+                } else {
+                    log('OAuth initiated successfully');
+                    setStatus('Redirecting to GitHub...', 'success');
+                }
+            } catch (error) {
+                log(`Exception during OAuth: ${error.message}`);
+                setStatus(`Exception: ${error.message}`, 'error');
+            }
+        }
+        
+        async function checkSession() {
+            log('Checking current session...');
+            
+            try {
+                const { data: { session }, error } = await supabaseClient.auth.getSession();
+                
+                if (error) {
+                    log(`Session Error: ${error.message}`);
+                    setStatus(`Session Error: ${error.message}`, 'error');
+                    return;
+                }
+                
+                if (session) {
+                    log(`Session found for user: ${session.user.email}`);
+                    log(`User ID: ${session.user.id}`);
+                    log(`Provider token available: ${!!session.provider_token}`);
+                    
+                    const githubProvider = session.user.identities?.find(identity => identity.provider === 'github');
+                    if (githubProvider) {
+                        log(`GitHub provider found: ${githubProvider.identity_data.user_name}`);
+                        log(`GitHub email: ${githubProvider.identity_data.email}`);
+                        setStatus(`Authenticated as ${githubProvider.identity_data.user_name}`, 'success');
+                        
+                        // Show session info
+                        document.getElementById('sessionInfo').innerHTML = `
+                            <div class="status success">
+                                <h4>Active GitHub Session</h4>
+                                <p><strong>Username:</strong> ${githubProvider.identity_data.user_name}</p>
+                                <p><strong>Email:</strong> ${githubProvider.identity_data.email}</p>
+                                <p><strong>Provider Token:</strong> ${session.provider_token ? 'Available' : 'Not available'}</p>
+                                <p><strong>Session expires:</strong> ${new Date(session.expires_at * 1000).toLocaleString()}</p>
+                            </div>
+                        `;
+                    } else {
+                        log('No GitHub provider found in session');
+                        setStatus('Session found but no GitHub provider', 'error');
+                    }
+                } else {
+                    log('No active session');
+                    setStatus('No active session', 'info');
+                    document.getElementById('sessionInfo').innerHTML = '';
+                }
+            } catch (error) {
+                log(`Exception checking session: ${error.message}`);
+                setStatus(`Exception: ${error.message}`, 'error');
+            }
+        }
+        
+        async function signOut() {
+            log('Signing out...');
+            
+            try {
+                const { error } = await supabaseClient.auth.signOut();
+                
+                if (error) {
+                    log(`Sign out error: ${error.message}`);
+                    setStatus(`Sign out error: ${error.message}`, 'error');
+                } else {
+                    log('Signed out successfully');
+                    setStatus('Signed out successfully', 'success');
+                    document.getElementById('sessionInfo').innerHTML = '';
+                }
+            } catch (error) {
+                log(`Exception during sign out: ${error.message}`);
+                setStatus(`Exception: ${error.message}`, 'error');
+            }
+        }
+        
+        function clearLogs() {
+            document.getElementById('log').textContent = '';
+        }
+        
+        // Listen for auth state changes
+        supabaseClient.auth.onAuthStateChange(async (event, session) => {
+            log(`Auth state changed: ${event}`);
+            
+            if (event === 'SIGNED_IN' && session) {
+                log('User signed in successfully');
+                const githubProvider = session.user.identities?.find(identity => identity.provider === 'github');
+                if (githubProvider) {
+                    log(`GitHub OAuth completed for: ${githubProvider.identity_data.user_name}`);
+                    setStatus(`GitHub OAuth successful for ${githubProvider.identity_data.user_name}`, 'success');
+                    checkSession(); // Refresh session info
+                }
+            } else if (event === 'SIGNED_OUT') {
+                log('User signed out');
+                setStatus('User signed out', 'info');
+            }
+        });
+        
+        // Check for OAuth callback parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('code') || urlParams.has('access_token') || urlParams.has('error')) {
+            log('OAuth callback detected in URL');
+            setStatus('Processing OAuth callback...', 'info');
+            
+            // Check session after a short delay
+            setTimeout(() => {
+                checkSession();
+            }, 2000);
+        }
+        
+        // Initial session check
+        document.addEventListener('DOMContentLoaded', () => {
+            log('Page loaded - checking for existing session...');
+            checkSession();
+        });
+    </script>
+</body>
+</html>

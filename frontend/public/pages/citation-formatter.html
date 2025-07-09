@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citation Formatter - Academic Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+            color: #e2e8f0;
+            padding: 2rem 1rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f8fafc, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #f1f5f9;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-group select {
+            cursor: pointer;
+        }
+
+        .form-group select option {
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+
+        .format-button {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 1rem;
+        }
+
+        .format-button:hover {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.3);
+        }
+
+        .format-button:active {
+            transform: translateY(0);
+        }
+
+        .result-section {
+            margin-top: 2.5rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .result-header {
+            margin-bottom: 1rem;
+        }
+
+        .result-header h3 {
+            color: #f1f5f9;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .citation-output {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 8px;
+            padding: 1.5rem;
+            min-height: 100px;
+            color: #e2e8f0;
+            font-size: 1rem;
+            line-height: 1.7;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .citation-text {
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+
+        .copy-button {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+
+        .copy-button:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+            transform: translateY(-1px);
+        }
+
+        .placeholder-text {
+            color: #64748b;
+            font-style: italic;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .citation-style-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #7c3aed, #5b21b6);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .form-group input,
+            .form-group select {
+                padding: 0.75rem;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button onclick="goBack()" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; color: #3b82f6; padding: 0.5rem 1rem; margin-bottom: 1rem; cursor: pointer; font-size: 0.9rem; transition: all 0.3s ease;">← Back to Research Tools</button>
+            <h1>Citation Formatter</h1>
+            <p>Professional academic citation generator for research papers</p>
+        </div>
+
+        <div class="form-section">
+            <form id="citationForm">
+                <div class="form-group">
+                    <label for="authorName">Author Name</label>
+                    <input type="text" id="authorName" placeholder="e.g., Smith, J." required>
+                </div>
+
+                <div class="form-group">
+                    <label for="paperTitle">Paper Title</label>
+                    <input type="text" id="paperTitle" placeholder="e.g., The Impact of Machine Learning on Modern Computing" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="journalName">Journal Name</label>
+                    <input type="text" id="journalName" placeholder="e.g., Journal of Computer Science" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="year">Publication Year</label>
+                    <input type="number" id="year" placeholder="e.g., 2023" min="1900" max="2024" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="citationStyle">Citation Style</label>
+                    <select id="citationStyle" required>
+                        <option value="">Select citation style</option>
+                        <option value="APA">APA (American Psychological Association)</option>
+                        <option value="MLA">MLA (Modern Language Association)</option>
+                        <option value="IEEE">IEEE (Institute of Electrical and Electronics Engineers)</option>
+                        <option value="Chicago">Chicago Manual of Style</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="format-button">Generate Citation</button>
+            </form>
+        </div>
+
+        <div class="result-section">
+            <div class="result-header">
+                <h3>Formatted Citation</h3>
+            </div>
+            <div class="citation-output" id="citationOutput">
+                <div class="placeholder-text">
+                    Fill out the form above and click "Generate Citation" to see your formatted citation here.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('citationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const authorName = document.getElementById('authorName').value.trim();
+            const paperTitle = document.getElementById('paperTitle').value.trim();
+            const journalName = document.getElementById('journalName').value.trim();
+            const year = document.getElementById('year').value.trim();
+            const citationStyle = document.getElementById('citationStyle').value;
+            
+            if (!authorName || !paperTitle || !journalName || !year || !citationStyle) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            const citation = formatCitation(authorName, paperTitle, journalName, year, citationStyle);
+            displayCitation(citation, citationStyle);
+        });
+        
+        function formatCitation(author, title, journal, year, style) {
+            switch(style) {
+                case 'APA':
+                    return `${author} (${year}). ${title}. <em>${journal}</em>.`;
+                
+                case 'MLA':
+                    return `${author} "${title}." <em>${journal}</em>, ${year}.`;
+                
+                case 'IEEE':
+                    return `${author}, "${title}," <em>${journal}</em>, ${year}.`;
+                
+                case 'Chicago':
+                    return `${author}. "${title}." <em>${journal}</em> (${year}).`;
+                
+                default:
+                    return 'Invalid citation style selected.';
+            }
+        }
+        
+        function displayCitation(citation, style) {
+            const outputDiv = document.getElementById('citationOutput');
+            
+            outputDiv.innerHTML = `
+                <div class="citation-style-badge">${style} Style</div>
+                <div class="citation-text">${citation}</div>
+                <button class="copy-button" onclick="copyCitation('${citation.replace(/'/g, "\\'")}')">
+                    Copy Citation
+                </button>
+            `;
+            
+            outputDiv.classList.add('fade-in');
+            
+            // Remove animation class after animation completes
+            setTimeout(() => {
+                outputDiv.classList.remove('fade-in');
+            }, 500);
+        }
+        
+        function copyCitation(citation) {
+            // Remove HTML tags for plain text copy
+            const plainText = citation.replace(/<[^>]*>/g, '');
+            
+            navigator.clipboard.writeText(plainText).then(() => {
+                const copyButton = document.querySelector('.copy-button');
+                const originalText = copyButton.textContent;
+                copyButton.textContent = 'Copied!';
+                copyButton.style.background = 'linear-gradient(135deg, #059669, #047857)';
+                
+                setTimeout(() => {
+                    copyButton.textContent = originalText;
+                    copyButton.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                }, 2000);
+            }).catch(() => {
+                alert('Failed to copy citation. Please copy manually.');
+            });
+        }
+        
+        // Auto-focus on first input when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('authorName').focus();
+        });
+
+        // Back navigation function
+        function goBack() {
+            const previousPage = sessionStorage.getItem('previousPage');
+            if (previousPage === 'research-tools') {
+                window.location.href = '../dashboard.html#research';
+            } else {
+                window.history.back();
+            }
+        }
+    </script>
+</body>
+</html>

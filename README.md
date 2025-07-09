@@ -472,7 +472,6 @@ engunity-ai/
 ├── data/                             # Data directory
 │   ├── uploads/                      # User uploaded files
 │   ├── models/                       # AI model files
-│   │   ├── phi-2/                    # Local Phi-2 model
 │   │   └── embeddings/               # Embedding models
 │   ├── exports/                      # Data exports
 │   └── backups/                      # Database backups

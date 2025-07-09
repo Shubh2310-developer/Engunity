@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Literature Review Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+            border-bottom: 1px solid #334155;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.025em;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Input Section */
+        .input-section {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .input-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .paper-input {
+            background: #1e293b;
+            border: 2px solid #475569;
+            border-radius: 12px;
+            padding: 1rem;
+            color: #e2e8f0;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .paper-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .paper-input::placeholder {
+            color: #64748b;
+        }
+
+        .upload-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #475569;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 1rem 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: rgba(30, 41, 59, 0.3);
+        }
+
+        .upload-area:hover {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .upload-area.dragover {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #64748b;
+            margin-bottom: 1rem;
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            margin: 2rem 0;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .progress-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .progress-text {
+            font-size: 1.1rem;
+            color: #f1f5f9;
+            font-weight: 500;
+        }
+
+        .progress-percentage {
+            font-size: 1.1rem;
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #334155;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            border-radius: 4px;
+            transition: width 2s ease-in-out;
+            width: 0%;
+        }
+
+        /* Results Section */
+        .results-section {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .results-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .category-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .category-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            border-color: #3b82f6;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #475569;
+        }
+
+        .category-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .category-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .category-count {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-left: auto;
+        }
+
+        .paper-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .paper-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid #475569;
+            border-radius: 12px;
+            padding: 1rem;
+            cursor: move;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .paper-card:hover {
+            border-color: #64748b;
+            transform: translateX(4px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .paper-card.dragging {
+            opacity: 0.7;
+            transform: rotate(3deg);
+        }
+
+        .paper-title {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #e2e8f0;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .paper-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .pdf-icon {
+            color: #ef4444;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pdf-icon:hover {
+            color: #dc2626;
+            transform: scale(1.1);
+        }
+
+        .drag-handle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            cursor: move;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .input-group {
+                grid-template-columns: 1fr;
+            }
+
+            .category-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+
+        /* Animation Classes */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .loading {
+            position: relative;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid #334155;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <button onclick="goBack()" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; color: #3b82f6; padding: 0.5rem 1rem; margin-bottom: 1rem; cursor: pointer; font-size: 0.9rem; transition: all 0.3s ease;">← Back to Research Tools</button>
+            <h1>Literature Review Assistant</h1>
+            <p>Organize, analyze, and categorize your research papers with intelligent clustering and comprehensive review tools</p>
+        </div>
+
+        <!-- Input Section -->
+        <div class="input-section">
+            <h2>
+                📚 Add Research Papers
+            </h2>
+            
+            <div class="input-group">
+                <textarea 
+                    class="paper-input" 
+                    id="paperInput"
+                    placeholder="Enter paper titles (one per line) or abstracts:
+
+Example:
+Deep Learning for Medical Image Analysis: A Comprehensive Review
+AI-Powered Diagnostic Systems in Healthcare: Current Trends and Future Directions
+Machine Learning Applications in Radiology: A Systematic Review
+Computer Vision Techniques for Medical Imaging
+Natural Language Processing in Clinical Decision Support Systems"
+                ></textarea>
+            </div>
+
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📄</div>
+                <p><strong>Drop PDF files here</strong> or click to browse</p>
+                <p style="font-size: 0.875rem; color: #64748b; margin-top: 0.5rem;">Supports PDF documents up to 10MB each</p>
+                <input type="file" id="fileInput" multiple accept=".pdf" style="display: none;">
+            </div>
+
+            <button class="analyze-btn" id="analyzeBtn">
+                🔍 Analyze Papers
+            </button>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="progress-section" id="progressSection">
+            <div class="progress-header">
+                <span class="progress-text">Analyzing and categorizing papers...</span>
+                <span class="progress-percentage" id="progressPercentage">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection">
+            <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: #f1f5f9;">📊 Literature Categories</h2>
+            <div class="category-grid" id="categoryGrid">
+                <!-- Categories will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data for demonstration
+        const samplePapers = [
+            {
+                title: "Deep Learning for Medical Image Analysis: A Comprehensive Review",
+                category: "Medical Imaging",
+                year: "2023",
+                authors: "Smith et al."
+            },
+            {
+                title: "AI-Powered Diagnostic Systems in Healthcare: Current Trends and Future Directions",
+                category: "Healthcare AI",
+                year: "2023",
+                authors: "Johnson et al."
+            },
+            {
+                title: "Machine Learning Applications in Radiology: A Systematic Review",
+                category: "Medical Imaging",
+                year: "2022",
+                authors: "Brown et al."
+            },
+            {
+                title: "Computer Vision Techniques for Medical Imaging",
+                category: "Medical Imaging",
+                year: "2023",
+                authors: "Davis et al."
+            },
+            {
+                title: "Natural Language Processing in Clinical Decision Support Systems",
+                category: "Healthcare AI",
+                year: "2022",
+                authors: "Wilson et al."
+            },
+            {
+                title: "Automated Diagnosis Using Deep Neural Networks",
+                category: "Diagnostics",
+                year: "2023",
+                authors: "Taylor et al."
+            },
+            {
+                title: "Predictive Analytics in Patient Care Management",
+                category: "Healthcare AI",
+                year: "2022",
+                authors: "Anderson et al."
+            },
+            {
+                title: "Real-time Medical Image Segmentation with CNNs",
+                category: "Medical Imaging",
+                year: "2023",
+                authors: "Miller et al."
+            },
+            {
+                title: "Clinical Decision Trees Using Machine Learning",
+                category: "Diagnostics",
+                year: "2022",
+                authors: "Garcia et al."
+            },
+            {
+                title: "Biomarker Discovery through AI-Driven Analysis",
+                category: "Diagnostics",
+                year: "2023",
+                authors: "Thompson et al."
+            }
+        ];
+
+        // DOM Elements
+        const paperInput = document.getElementById('paperInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const progressSection = document.getElementById('progressSection');
+        const progressFill = document.getElementById('progressFill');
+        const progressPercentage = document.getElementById('progressPercentage');
+        const resultsSection = document.getElementById('resultsSection');
+        const categoryGrid = document.getElementById('categoryGrid');
+
+        // Event Listeners
+        analyzeBtn.addEventListener('click', analyzePapers);
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // Drag and Drop functionality
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            const fileNames = Array.from(files).map(file => file.name);
+            const currentText = paperInput.value;
+            const newText = currentText + (currentText ? '\n' : '') + fileNames.join('\n');
+            paperInput.value = newText;
+        }
+
+        // Main analysis function
+        async function analyzePapers() {
+            const inputText = paperInput.value.trim();
+            
+            if (!inputText) {
+                alert('Please enter some paper titles or upload files first.');
+                return;
+            }
+
+            // Start analysis
+            analyzeBtn.disabled = true;
+            analyzeBtn.classList.add('loading');
+            progressSection.classList.add('visible');
+            resultsSection.classList.remove('visible');
+
+            // Simulate progress
+            await simulateProgress();
+
+            // Process papers
+            const papers = processPapers(inputText);
+            const categories = categorizePapers(papers);
+
+            // Show results
+            displayResults(categories);
+            
+            // Clean up
+            analyzeBtn.disabled = false;
+            analyzeBtn.classList.remove('loading');
+            resultsSection.classList.add('visible');
+        }
+
+        function simulateProgress() {
+            return new Promise((resolve) => {
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 15;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(interval);
+                        resolve();
+                    }
+                    progressFill.style.width = progress + '%';
+                    progressPercentage.textContent = Math.round(progress) + '%';
+                }, 200);
+            });
+        }
+
+        function processPapers(inputText) {
+            const lines = inputText.split('\n').filter(line => line.trim());
+            
+            // If user entered custom papers, categorize them intelligently
+            return lines.map(line => {
+                const title = line.trim();
+                const category = determineCategory(title);
+                return {
+                    title: title,
+                    category: category,
+                    year: "2023",
+                    authors: "Various"
+                };
+            });
+        }
+
+        function determineCategory(title) {
+            const titleLower = title.toLowerCase();
+            
+            if (titleLower.includes('imaging') || titleLower.includes('radiology') || titleLower.includes('mri') || titleLower.includes('ct') || titleLower.includes('vision')) {
+                return 'Medical Imaging';
+            } else if (titleLower.includes('diagnostic') || titleLower.includes('diagnosis') || titleLower.includes('detection') || titleLower.includes('screening')) {
+                return 'Diagnostics';
+            } else if (titleLower.includes('ai') || titleLower.includes('artificial intelligence') || titleLower.includes('machine learning') || titleLower.includes('deep learning') || titleLower.includes('healthcare') || titleLower.includes('clinical')) {
+                return 'Healthcare AI';
+            } else if (titleLower.includes('nlp') || titleLower.includes('natural language') || titleLower.includes('text') || titleLower.includes('language')) {
+                return 'NLP & Text Mining';
+            } else if (titleLower.includes('drug') || titleLower.includes('pharmaceutical') || titleLower.includes('discovery') || titleLower.includes('molecule')) {
+                return 'Drug Discovery';
+            } else {
+                return 'General Research';
+            }
+        }
+
+        function categorizePapers(papers) {
+            // If no custom papers, use sample data for demonstration
+            const papersToUse = papers.length > 0 ? papers : samplePapers;
+            
+            const categories = {};
+            
+            papersToUse.forEach(paper => {
+                if (!categories[paper.category]) {
+                    categories[paper.category] = [];
+                }
+                categories[paper.category].push(paper);
+            });
+            
+            return categories;
+        }
+
+        function displayResults(categories) {
+            categoryGrid.innerHTML = '';
+            
+            const categoryIcons = {
+                'Medical Imaging': '🏥',
+                'Healthcare AI': '🤖',
+                'Diagnostics': '🔬',
+                'NLP & Text Mining': '📝',
+                'Drug Discovery': '💊',
+                'General Research': '📊'
+            };
+            
+            Object.entries(categories).forEach(([categoryName, papers]) => {
+                const categoryCard = createCategoryCard(categoryName, papers, categoryIcons[categoryName] || '📄');
+                categoryGrid.appendChild(categoryCard);
+            });
+        }
+
+        function createCategoryCard(categoryName, papers, icon) {
+            const card = document.createElement('div');
+            card.className = 'category-card fade-in';
+            
+            card.innerHTML = `
+                <div class="category-header">
+                    <div class="category-icon">${icon}</div>
+                    <div class="category-title">${categoryName}</div>
+                    <div class="category-count">${papers.length}</div>
+                </div>
+                <div class="paper-cards">
+                    ${papers.map(paper => createPaperCard(paper)).join('')}
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function createPaperCard(paper) {
+            return `
+                <div class="paper-card" draggable="true">
+                    <div class="paper-title">${paper.title}</div>
+                    <div class="paper-meta">
+                        <span class="pdf-icon" onclick="openPDF('${paper.title}')" title="View PDF">📄</span>
+                        <span>${paper.authors}</span>
+                        <span>${paper.year}</span>
+                    </div>
+                    <div class="drag-handle">⋮⋮</div>
+                </div>
+            `;
+        }
+
+        function openPDF(title) {
+            // Simulate PDF opening functionality
+            const confirmation = confirm(`Would you like to open the PDF for:\n"${title}"\n\n(This is a demo - in a real application, this would open the actual PDF file)`);
+            
+            if (confirmation) {
+                // In a real application, this would open the PDF
+                window.open('data:application/pdf;base64,', '_blank');
+            }
+        }
+
+        // Drag and Drop for paper cards
+        document.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('paper-card')) {
+                e.target.classList.add('dragging');
+            }
+        });
+
+        document.addEventListener('dragend', (e) => {
+            if (e.target.classList.contains('paper-card')) {
+                e.target.classList.remove('dragging');
+            }
+        });
+
+        // Initialize with sample text for demo
+        window.addEventListener('load', () => {
+            paperInput.value = `Deep Learning for Medical Image Analysis: A Comprehensive Review
+AI-Powered Diagnostic Systems in Healthcare: Current Trends and Future Directions
+Machine Learning Applications in Radiology: A Systematic Review
+Computer Vision Techniques for Medical Imaging
+Natural Language Processing in Clinical Decision Support Systems`;
+        });
+
+        // Back navigation function
+        function goBack() {
+            const previousPage = sessionStorage.getItem('previousPage');
+            if (previousPage === 'research-tools') {
+                window.location.href = '../dashboard.html#research';
+            } else {
+                window.history.back();
+            }
+        }
+    </script>
+</body>
+</html>
