@@ -1,24 +1,28 @@
 """API Key schemas for request/response validation."""
 
 from datetime import datetime
-from typing import Dict, Optional
-from pydantic import BaseModel, Field, validator
+from typing import Dict, List, Optional
+from pydantic import BaseModel, Field, field_validator
 
 class APIKeyCreate(BaseModel):
     """Schema for creating an API key."""
-    provider: str = Field(..., description="Provider name (openai, gemini, together, openrouter, huggingface)")
+    provider: str = Field(..., description="Provider name (openai, gemini, together, openrouter, huggingface, groq)")
     api_key: str = Field(..., description="API key value")
-    model_name: Optional[str] = Field(None, description="Default model for this provider")
+    llm_model_name: Optional[str] = Field(None, description="Default model for this provider")
     is_default: bool = Field(False, description="Set as default provider")
     
-    @validator('provider')
+    model_config = {"protected_namespaces": ()}
+    
+    @field_validator('provider')
+    @classmethod
     def validate_provider(cls, v):
-        allowed_providers = ["openai", "gemini", "together", "openrouter", "huggingface"]
+        allowed_providers = ["openai", "gemini", "together", "openrouter", "huggingface", "groq"]
         if v not in allowed_providers:
             raise ValueError(f"Provider must be one of: {allowed_providers}")
         return v
     
-    @validator('api_key')
+    @field_validator('api_key')
+    @classmethod
     def validate_api_key(cls, v):
         if not v or len(v.strip()) == 0:
             raise ValueError("API key cannot be empty")
@@ -28,17 +32,21 @@ class APIKeyUpdate(BaseModel):
     """Schema for updating an API key."""
     provider: str = Field(..., description="Provider name")
     api_key: str = Field(..., description="API key value")
-    model_name: Optional[str] = Field(None, description="Default model for this provider")
+    llm_model_name: Optional[str] = Field(None, description="Default model for this provider")
     is_default: bool = Field(False, description="Set as default provider")
     
-    @validator('provider')
+    model_config = {"protected_namespaces": ()}
+    
+    @field_validator('provider')
+    @classmethod
     def validate_provider(cls, v):
-        allowed_providers = ["openai", "gemini", "together", "openrouter", "huggingface"]
+        allowed_providers = ["openai", "gemini", "together", "openrouter", "huggingface", "groq"]
         if v not in allowed_providers:
             raise ValueError(f"Provider must be one of: {allowed_providers}")
         return v
     
-    @validator('api_key')
+    @field_validator('api_key')
+    @classmethod
     def validate_api_key(cls, v):
         if not v or len(v.strip()) == 0:
             raise ValueError("API key cannot be empty")
@@ -48,7 +56,7 @@ class APIKeyResponse(BaseModel):
     """Schema for API key response."""
     id: int
     provider: str
-    model_name: Optional[str]
+    llm_model_name: Optional[str]
     is_active: bool
     is_default: bool
     is_valid: bool
@@ -58,8 +66,7 @@ class APIKeyResponse(BaseModel):
     created_at: datetime
     provider_info: Dict
     
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True, "protected_namespaces": ()}
 
 class ProviderInfo(BaseModel):
     """Schema for provider information."""

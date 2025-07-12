@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Integrated Chat - Engunity AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+            display: inline-block;
+        }
+        .test-button:hover {
+            background: #4338ca;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success {
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+        .error {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .feature-list {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .mongo-schema {
+            background: #f0f8f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Integrated AI Chat & Code Generation System</h1>
+        
+        <div class="feature-list">
+            <h2>✨ Features Implemented:</h2>
+            <ul>
+                <li><strong>ChatGPT-like UI</strong> - Beautiful dark theme interface</li>
+                <li><strong>Automatic Code Detection</strong> - Intelligently detects code requests</li>
+                <li><strong>Integrated MongoDB Storage</strong> - Stores all data in proper collections</li>
+                <li><strong>Syntax Highlighting</strong> - Prism.js code highlighting</li>
+                <li><strong>Chat History</strong> - Persistent conversation storage</li>
+                <li><strong>Copy Code Feature</strong> - One-click code copying</li>
+                <li><strong>Responsive Design</strong> - Works on all devices</li>
+            </ul>
+        </div>
+
+        <div class="mongo-schema">
+            <h2>🗃️ MongoDB Collections Structure:</h2>
+            <ul>
+                <li><strong>chat_history</strong> - Stores all conversations with messages</li>
+                <li><strong>codes</strong> - Generated code snippets with metadata</li>
+                <li><strong>user_stats</strong> - User statistics and analytics</li>
+                <li><strong>images</strong> - Image documents (ready for future features)</li>
+                <li><strong>pdfs</strong> - PDF documents (ready for future features)</li>
+            </ul>
+        </div>
+
+        <h2>🔧 Test the System:</h2>
+        <p>Use these buttons to test different functionalities:</p>
+        
+        <button class="test-button" onclick="testBasicIntegration()">Test Basic Integration</button>
+        <button class="test-button" onclick="testCodeGeneration()">Test Code Generation</button>
+        <button class="test-button" onclick="testChatCompletion()">Test Chat Completion</button>
+        <button class="test-button" onclick="testApiEndpoints()">Test API Endpoints</button>
+        
+        <div id="testResults"></div>
+
+        <h2>🎯 How to Use:</h2>
+        <ol>
+            <li><strong>Access the Code Chat Interface:</strong> 
+                <a href="/pages/code-chat.html" target="_blank">Open Code Chat Interface</a>
+            </li>
+            <li><strong>Login with Supabase:</strong> Use your authentication credentials</li>
+            <li><strong>Start Chatting:</strong> 
+                <ul>
+                    <li>Ask general questions: "What is machine learning?"</li>
+                    <li>Request code: "Write a Python function to sort a list"</li>
+                    <li>Get explanations: "Explain how recursion works"</li>
+                    <li>Debug code: "Fix this JavaScript function"</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h2>🔗 API Endpoints Available:</h2>
+        <ul>
+            <li><code>POST /api/v1/integrated-chat</code> - Main chat endpoint with auto code detection</li>
+            <li><code>GET /api/v1/user-chats</code> - Get user's chat history</li>
+            <li><code>GET /api/v1/chat-history/{chat_id}</code> - Get specific chat messages</li>
+            <li><code>POST /api/v1/code/generate</code> - Direct code generation</li>
+            <li><code>POST /api/v1/ai/chat/completions</code> - Direct chat completion</li>
+        </ul>
+
+        <h2>💾 Data Storage:</h2>
+        <p>All conversations and generated code are automatically stored in MongoDB with the exact schema you specified:</p>
+        <ul>
+            <li><strong>User messages</strong> stored with timestamps and metadata</li>
+            <li><strong>AI responses</strong> stored with response type and token usage</li>
+            <li><strong>Generated code</strong> stored in separate collection with language info</li>
+            <li><strong>User statistics</strong> updated for analytics</li>
+        </ul>
+    </div>
+
+    <script>
+        function addResult(title, content, isSuccess = true) {
+            const results = document.getElementById('testResults');
+            const div = document.createElement('div');
+            div.className = `result ${isSuccess ? 'success' : 'error'}`;
+            div.innerHTML = `<strong>${title}</strong>\n${content}`;
+            results.appendChild(div);
+        }
+
+        async function testBasicIntegration() {
+            addResult('🔄 Testing Basic Integration...', 'Checking server health and endpoints...');
+            
+            try {
+                const healthResponse = await fetch('/api/health');
+                const healthData = await healthResponse.json();
+                
+                addResult('✅ Server Health Check', `Status: ${healthData.status}\nApp: ${healthData.app}\nVersion: ${healthData.version}`);
+                
+                // Test endpoint availability (should return 403 without auth)
+                const chatResponse = await fetch('/api/v1/integrated-chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: 'test' })
+                });
+                
+                if (chatResponse.status === 403) {
+                    addResult('✅ Authentication Working', 'Integrated chat endpoint properly requires authentication');
+                } else {
+                    addResult('❌ Authentication Issue', `Expected 403, got ${chatResponse.status}`);
+                }
+                
+            } catch (error) {
+                addResult('❌ Basic Integration Test Failed', error.message, false);
+            }
+        }
+
+        async function testCodeGeneration() {
+            addResult('🔄 Testing Code Generation...', 'Testing direct code generation endpoint...');
+            
+            try {
+                const response = await fetch('/api/v1/code/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: 'Create a hello world function',
+                        language: 'python'
+                    })
+                });
+                
+                if (response.status === 403) {
+                    addResult('✅ Code Generation Endpoint', 'Code generation endpoint is available and requires authentication');
+                } else {
+                    addResult('❌ Code Generation Issue', `Unexpected status: ${response.status}`, false);
+                }
+                
+            } catch (error) {
+                addResult('❌ Code Generation Test Failed', error.message, false);
+            }
+        }
+
+        async function testChatCompletion() {
+            addResult('🔄 Testing Chat Completion...', 'Testing AI chat completion endpoint...');
+            
+            try {
+                const response = await fetch('/api/v1/ai/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messages: [{ role: 'user', content: 'Hello' }]
+                    })
+                });
+                
+                if (response.status === 403) {
+                    addResult('✅ Chat Completion Endpoint', 'Chat completion endpoint is available and requires authentication');
+                } else {
+                    addResult('❌ Chat Completion Issue', `Unexpected status: ${response.status}`, false);
+                }
+                
+            } catch (error) {
+                addResult('❌ Chat Completion Test Failed', error.message, false);
+            }
+        }
+
+        async function testApiEndpoints() {
+            addResult('🔄 Testing All API Endpoints...', 'Checking endpoint availability...');
+            
+            const endpoints = [
+                { path: '/api/v1/integrated-chat', method: 'POST' },
+                { path: '/api/v1/user-chats', method: 'GET' },
+                { path: '/api/v1/code/languages', method: 'GET' },
+                { path: '/api/v1/code/generate', method: 'POST' }
+            ];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint.path, {
+                        method: endpoint.method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: endpoint.method === 'POST' ? JSON.stringify({message: 'test'}) : undefined
+                    });
+                    
+                    const status = response.status === 403 ? '✅ Available (Auth Required)' : `❓ Status: ${response.status}`;
+                    addResult(`${endpoint.method} ${endpoint.path}`, status);
+                    
+                } catch (error) {
+                    addResult(`❌ ${endpoint.method} ${endpoint.path}`, error.message, false);
+                }
+            }
+        }
+
+        // Auto-run basic test on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(testBasicIntegration, 1000);
+        });
+    </script>
+</body>
+</html>

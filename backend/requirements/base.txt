@@ -25,3 +25,10 @@ python-dateutil==2.8.2
 
 # JSON handling
 orjson==3.9.10
+
+# MongoDB
+pymongo==4.6.0
+motor==3.3.2
+
+# Groq AI
+groq==0.11.0

@@ -16,7 +16,11 @@
       "Bash(done)",
       "Bash(python:*)",
       "Bash(curl:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(rm:*)",
+      "Bash(node:*)",
+      "Bash(sed:*)",
+      "Bash(timeout:*)"
     ],
     "deny": []
   }

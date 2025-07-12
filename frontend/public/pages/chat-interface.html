@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat - Engunity AI</title>
+    <link rel="icon" href="/assets/images/logo/favicon.png" type="image/png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --bg-card: #fff;
+            --text-main: #23272f;
+            --text-secondary: #6366f1;
+            --text-muted: #64748b;
+            --border-main: #e5e7eb;
+            --shadow-main: 0 2px 12px rgba(30, 41, 59, 0.04);
+            --accent: #3b82f6;
+            --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        .chat-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-card);
+        }
+
+        .chat-header {
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border-main);
+            background: var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-main);
+        }
+
+        .chat-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .message {
+            display: flex;
+            gap: 1rem;
+            max-width: 80%;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: var(--accent-gradient);
+            color: white;
+        }
+
+        .message.assistant .message-avatar {
+            background: var(--bg-main);
+            color: var(--text-secondary);
+            border: 2px solid var(--border-main);
+        }
+
+        .message-content {
+            background: var(--bg-card);
+            padding: 1rem 1.5rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border-main);
+            box-shadow: var(--shadow-main);
+            white-space: pre-wrap;
+        }
+
+        .message.user .message-content {
+            background: var(--accent);
+            color: white;
+            border: none;
+        }
+
+        .chat-input-container {
+            padding: 2rem;
+            border-top: 1px solid var(--border-main);
+            background: var(--bg-card);
+        }
+
+        .chat-input-form {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            min-height: 50px;
+            max-height: 150px;
+            padding: 1rem;
+            border: 2px solid var(--border-main);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            resize: none;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .chat-input:focus {
+            border-color: var(--accent);
+        }
+
+        .send-button {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            height: 50px;
+            min-width: 100px;
+        }
+
+        .send-button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typing {
+            0%, 80%, 100% {
+                transform: scale(0);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .error-message {
+            background: #fef2f2;
+            color: var(--error);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #fecaca;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .back-button {
+            background: none;
+            border: 1px solid var(--border-main);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .back-button:hover {
+            background: var(--bg-main);
+            border-color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="chat-title">AI Chat Assistant</div>
+            <a href="/dashboard.html" class="back-button">
+                ê Back to Dashboard
+            </a>
+        </div>
+        
+        <div class="error-message" id="error-message"></div>
+        
+        <div class="chat-messages" id="chat-messages">
+            <div class="message assistant">
+                <div class="message-avatar">AI</div>
+                <div class="message-content">
+                    Hello! I'm your AI assistant powered by Groq's Llama 3.3 70B model. How can I help you today?
+                </div>
+            </div>
+        </div>
+        
+        <div class="typing-indicator" id="typing-indicator">
+            <span>AI is typing</span>
+            <div class="typing-dots">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+        
+        <div class="chat-input-container">
+            <form class="chat-input-form" id="chat-form">
+                <textarea 
+                    class="chat-input" 
+                    id="chat-input" 
+                    placeholder="Type your message here..."
+                    rows="1"
+                ></textarea>
+                <button type="submit" class="send-button" id="send-button">
+                    Send
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Supabase configuration
+        const SUPABASE_URL = 'https://qhbbzpkqjfhgpgrkpqkp.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFoYmJ6cGtxamZoZ3BncmtwcWtwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ2Mzg4MTAsImV4cCI6MjA1MDIxNDgxMH0.wVw_kWbZfYdFnLhOSFXBp5D6wfBCcm68jgH1GpIBsAo';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // DOM elements
+        const chatMessages = document.getElementById('chat-messages');
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const sendButton = document.getElementById('send-button');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const errorMessage = document.getElementById('error-message');
+
+        // Auto-resize textarea
+        chatInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+        });
+
+        // Handle form submission
+        chatForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const message = chatInput.value.trim();
+            if (!message) return;
+            
+            await sendMessage(message);
+        });
+
+        // Handle Enter key (without Shift)
+        chatInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                chatForm.dispatchEvent(new Event('submit'));
+            }
+        });
+
+        async function sendMessage(message) {
+            try {
+                // Hide error message
+                errorMessage.style.display = 'none';
+                
+                // Add user message to chat
+                addMessage('user', message);
+                
+                // Clear input and disable send button
+                chatInput.value = '';
+                chatInput.style.height = 'auto';
+                sendButton.disabled = true;
+                
+                // Show typing indicator
+                typingIndicator.style.display = 'flex';
+                
+                // Get user token
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) {
+                    throw new Error('Please log in to use the chat');
+                }
+
+                // Prepare messages for API
+                const messages = getConversationHistory();
+                messages.push({ role: 'user', content: message });
+
+                // Send to backend API
+                const response = await fetch('/api/v1/ai/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({
+                        messages: messages,
+                        temperature: 0.7,
+                        max_tokens: 1024,
+                        stream: false
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to get AI response');
+                }
+
+                const completion = await response.json();
+                const aiResponse = completion.choices[0].message.content;
+                
+                // Add AI response to chat
+                addMessage('assistant', aiResponse);
+                
+            } catch (error) {
+                console.error('Error sending message:', error);
+                showError(error.message);
+                
+                // Add error message to chat
+                addMessage('assistant', 'Sorry, I encountered an error processing your request. Please try again.');
+                
+            } finally {
+                // Hide typing indicator and re-enable send button
+                typingIndicator.style.display = 'none';
+                sendButton.disabled = false;
+                chatInput.focus();
+            }
+        }
+
+        function addMessage(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = role === 'user' ? 'U' : 'AI';
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.textContent = content;
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(messageContent);
+            
+            chatMessages.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function getConversationHistory() {
+            const messages = [];
+            const messageElements = chatMessages.querySelectorAll('.message');
+            
+            messageElements.forEach(msgEl => {
+                if (!msgEl.querySelector('.message-content')) return;
+                
+                const role = msgEl.classList.contains('user') ? 'user' : 'assistant';
+                const content = msgEl.querySelector('.message-content').textContent.trim();
+                
+                // Skip the initial greeting message
+                if (role === 'assistant' && content.includes('Hello! I\'m your AI assistant')) return;
+                
+                messages.push({ role, content });
+            });
+            
+            return messages;
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        // Check authentication on page load
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                showError('Please log in to use the chat feature');
+                sendButton.disabled = true;
+                chatInput.placeholder = 'Please log in to start chatting...';
+                chatInput.disabled = true;
+            }
+        }
+
+        // Initialize
+        checkAuth();
+        chatInput.focus();
+    </script>
+</body>
+</html>

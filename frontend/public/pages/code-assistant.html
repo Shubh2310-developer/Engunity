@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Assistant - Engunity AI</title>
+    <meta name="description" content="AI-powered code generation, review, and optimization">
+    <link rel="icon" href="/assets/images/logo/favicon.png" type="image/png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- CodeMirror for code editing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/clike/clike.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/eclipse.min.css">
+    
+    <style>
+        /* Color Variables */
+        :root {
+            --bg-main: #f8fafc;
+            --bg-card: #fff;
+            --bg-navbar: #fff;
+            --bg-sidebar: #fff;
+            --text-main: #23272f;
+            --text-secondary: #6366f1;
+            --text-muted: #64748b;
+            --border-main: #e5e7eb;
+            --shadow-main: 0 2px 12px rgba(30, 41, 59, 0.04);
+            --accent: #3b82f6;
+            --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --info: #06b6d4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            background: var(--bg-card);
+            border: 1px solid var(--border-main);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-main);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.125rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            min-height: 70vh;
+        }
+
+        .input-panel, .output-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-main);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-main);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-main);
+        }
+
+        .panel-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .mode-tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: var(--bg-main);
+            padding: 0.25rem;
+            border-radius: 8px;
+        }
+
+        .mode-tab {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .mode-tab.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-main);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            background: var(--bg-main);
+            color: var(--text-main);
+            transition: border-color 0.2s ease;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: var(--shadow-main);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-main);
+            color: var(--text-main);
+            border: 1px solid var(--border-main);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-main);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: auto;
+            padding-top: 1rem;
+        }
+
+        .code-editor {
+            flex: 1;
+            border: 1px solid var(--border-main);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .CodeMirror {
+            height: 100%;
+            min-height: 400px;
+            font-size: 14px;
+        }
+
+        .output-content {
+            flex: 1;
+            background: var(--bg-main);
+            border: 1px solid var(--border-main);
+            border-radius: 8px;
+            padding: 1.5rem;
+            min-height: 400px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            overflow-y: auto;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .loading::before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-main);
+            border-top: 2px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            color: var(--error);
+            background: rgba(239, 68, 68, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--error);
+        }
+
+        .success {
+            color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--success);
+        }
+
+        .review-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-main);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .review-item.critical {
+            border-left: 4px solid var(--error);
+        }
+
+        .review-item.high {
+            border-left: 4px solid var(--warning);
+        }
+
+        .review-item.medium {
+            border-left: 4px solid var(--info);
+        }
+
+        .review-item.low {
+            border-left: 4px solid var(--success);
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .review-type {
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .review-severity {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .severity-critical {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+        }
+
+        .severity-high {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .severity-medium {
+            background: rgba(6, 182, 212, 0.1);
+            color: var(--info);
+        }
+
+        .severity-low {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .back-button {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            padding: 0.75rem 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-main);
+            border-radius: 8px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 500;
+            box-shadow: var(--shadow-main);
+            transition: all 0.2s ease;
+        }
+
+        .back-button:hover {
+            background: var(--bg-main);
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/dashboard.html" class="back-button">ê Back to Dashboard</a>
+    
+    <div class="container">
+        <div class="header">
+            <h1>Code Assistant</h1>
+            <p>AI-powered code generation, review, and optimization using Llama 3.3 70B</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Input Panel -->
+            <div class="input-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Input</h2>
+                    <div class="mode-tabs">
+                        <button class="mode-tab active" data-mode="generate">Generate</button>
+                        <button class="mode-tab" data-mode="review">Review</button>
+                        <button class="mode-tab" data-mode="optimize">Optimize</button>
+                        <button class="mode-tab" data-mode="explain">Explain</button>
+                    </div>
+                </div>
+
+                <!-- Generate Mode -->
+                <div id="generateMode" class="mode-content">
+                    <form id="generateForm">
+                        <div class="form-group">
+                            <label class="form-label" for="prompt">Code Generation Prompt</label>
+                            <textarea id="prompt" class="form-textarea" placeholder="Describe what you want to build...&#10;Example: Create a function that sorts an array of objects by multiple keys"></textarea>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="language">Language</label>
+                                <select id="language" class="form-select">
+                                    <option value="python">Python</option>
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="typescript">TypeScript</option>
+                                    <option value="java">Java</option>
+                                    <option value="cpp">C++</option>
+                                    <option value="c">C</option>
+                                    <option value="csharp">C#</option>
+                                    <option value="go">Go</option>
+                                    <option value="rust">Rust</option>
+                                    <option value="php">PHP</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="framework">Framework (Optional)</label>
+                                <input type="text" id="framework" class="form-input" placeholder="e.g., React, Django, Spring">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="complexity">Complexity</label>
+                                <select id="complexity" class="form-select">
+                                    <option value="beginner">Beginner</option>
+                                    <option value="intermediate" selected>Intermediate</option>
+                                    <option value="advanced">Advanced</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="maxTokens">Max Tokens</label>
+                                <select id="maxTokens" class="form-select">
+                                    <option value="1024">1024</option>
+                                    <option value="2048" selected>2048</option>
+                                    <option value="4096">4096</option>
+                                    <option value="8192">8192</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Options</label>
+                            <div class="checkbox-group">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="includeComments" checked>
+                                    <label for="includeComments">Include Comments</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="includeTests">
+                                    <label for="includeTests">Include Tests</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button type="submit" class="btn btn-primary">Generate Code</button>
+                            <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Review Mode -->
+                <div id="reviewMode" class="mode-content" style="display: none;">
+                    <form id="reviewForm">
+                        <div class="form-group">
+                            <label class="form-label" for="reviewCode">Code to Review</label>
+                            <div id="reviewCodeEditor" class="code-editor"></div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="reviewLanguage">Language</label>
+                                <select id="reviewLanguage" class="form-select">
+                                    <option value="python">Python</option>
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="typescript">TypeScript</option>
+                                    <option value="java">Java</option>
+                                    <option value="cpp">C++</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="severityLevel">Severity Level</label>
+                                <select id="severityLevel" class="form-select">
+                                    <option value="all">All Issues</option>
+                                    <option value="medium">Medium & Above</option>
+                                    <option value="high">High & Critical</option>
+                                    <option value="critical">Critical Only</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Focus Areas</label>
+                            <div class="checkbox-group">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="focusSecurity" checked>
+                                    <label for="focusSecurity">Security</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="focusPerformance" checked>
+                                    <label for="focusPerformance">Performance</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="focusReadability" checked>
+                                    <label for="focusReadability">Readability</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="focusMaintainability">
+                                    <label for="focusMaintainability">Maintainability</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button type="submit" class="btn btn-primary">Review Code</button>
+                            <button type="button" class="btn btn-secondary" onclick="clearReviewEditor()">Clear</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Optimize Mode -->
+                <div id="optimizeMode" class="mode-content" style="display: none;">
+                    <form id="optimizeForm">
+                        <div class="form-group">
+                            <label class="form-label" for="optimizeCode">Code to Optimize</label>
+                            <div id="optimizeCodeEditor" class="code-editor"></div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="optimizeLanguage">Language</label>
+                                <select id="optimizeLanguage" class="form-select">
+                                    <option value="python">Python</option>
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="typescript">TypeScript</option>
+                                    <option value="java">Java</option>
+                                    <option value="cpp">C++</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="preserveFunctionality" checked>
+                                    <label for="preserveFunctionality">Preserve Functionality</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Optimization Goals</label>
+                            <div class="checkbox-group">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="goalPerformance" checked>
+                                    <label for="goalPerformance">Performance</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="goalMemory">
+                                    <label for="goalMemory">Memory Usage</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="goalReadability">
+                                    <label for="goalReadability">Readability</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button type="submit" class="btn btn-primary">Optimize Code</button>
+                            <button type="button" class="btn btn-secondary" onclick="clearOptimizeEditor()">Clear</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Explain Mode -->
+                <div id="explainMode" class="mode-content" style="display: none;">
+                    <form id="explainForm">
+                        <div class="form-group">
+                            <label class="form-label" for="explainCode">Code to Explain</label>
+                            <div id="explainCodeEditor" class="code-editor"></div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="explainLanguage">Language</label>
+                                <select id="explainLanguage" class="form-select">
+                                    <option value="python">Python</option>
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="typescript">TypeScript</option>
+                                    <option value="java">Java</option>
+                                    <option value="cpp">C++</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="detailLevel">Detail Level</label>
+                                <select id="detailLevel" class="form-select">
+                                    <option value="beginner">Beginner</option>
+                                    <option value="intermediate" selected>Intermediate</option>
+                                    <option value="advanced">Advanced</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="includeExamples" checked>
+                                <label for="includeExamples">Include Usage Examples</label>
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button type="submit" class="btn btn-primary">Explain Code</button>
+                            <button type="button" class="btn btn-secondary" onclick="clearExplainEditor()">Clear</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Output Panel -->
+            <div class="output-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Output</h2>
+                    <button class="btn btn-secondary" onclick="copyOutput()">Copy</button>
+                </div>
+                
+                <div id="outputContent" class="output-content">
+                    <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                        > AI-generated code will appear here...
+                        <br><br>
+                        Choose a mode and provide input to get started!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Supabase
+        const supabaseUrl = 'https://ckrtquhwlvpmpgrfemmb.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnRxdWh3bHZwbXBncmZlbW1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2NTE5MjQsImV4cCI6MjA2NTIyNzkyNH0.EKkuLjGdt3BJckM9XtboDCknG5ggt0xwcAI_jI8Al6k';
+        const { createClient } = supabase;
+        const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+
+        // CodeMirror editors
+        let reviewEditor, optimizeEditor, explainEditor;
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthentication();
+            initializeModeHandlers();
+            initializeCodeEditors();
+            initializeForms();
+        });
+
+        async function checkAuthentication() {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = '/login.html';
+            }
+        }
+
+        function initializeModeHandlers() {
+            const modeTabs = document.querySelectorAll('.mode-tab');
+            const modeContents = document.querySelectorAll('.mode-content');
+
+            modeTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs
+                    modeTabs.forEach(t => t.classList.remove('active'));
+                    modeContents.forEach(c => c.style.display = 'none');
+
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+                    const mode = tab.dataset.mode;
+                    document.getElementById(mode + 'Mode').style.display = 'block';
+                });
+            });
+        }
+
+        function initializeCodeEditors() {
+            // Review editor
+            reviewEditor = CodeMirror(document.getElementById('reviewCodeEditor'), {
+                mode: 'python',
+                theme: 'eclipse',
+                lineNumbers: true,
+                autoCloseBrackets: true,
+                matchBrackets: true,
+                indentUnit: 4,
+                placeholder: 'Paste your code here for review...'
+            });
+
+            // Optimize editor
+            optimizeEditor = CodeMirror(document.getElementById('optimizeCodeEditor'), {
+                mode: 'python',
+                theme: 'eclipse',
+                lineNumbers: true,
+                autoCloseBrackets: true,
+                matchBrackets: true,
+                indentUnit: 4,
+                placeholder: 'Paste your code here for optimization...'
+            });
+
+            // Explain editor
+            explainEditor = CodeMirror(document.getElementById('explainCodeEditor'), {
+                mode: 'python',
+                theme: 'eclipse',
+                lineNumbers: true,
+                autoCloseBrackets: true,
+                matchBrackets: true,
+                indentUnit: 4,
+                placeholder: 'Paste your code here for explanation...'
+            });
+
+            // Update editor modes when language changes
+            document.getElementById('reviewLanguage').addEventListener('change', (e) => {
+                reviewEditor.setOption('mode', getCodeMirrorMode(e.target.value));
+            });
+
+            document.getElementById('optimizeLanguage').addEventListener('change', (e) => {
+                optimizeEditor.setOption('mode', getCodeMirrorMode(e.target.value));
+            });
+
+            document.getElementById('explainLanguage').addEventListener('change', (e) => {
+                explainEditor.setOption('mode', getCodeMirrorMode(e.target.value));
+            });
+        }
+
+        function getCodeMirrorMode(language) {
+            const modes = {
+                'python': 'python',
+                'javascript': 'javascript',
+                'typescript': 'javascript',
+                'java': 'text/x-java',
+                'cpp': 'text/x-c++src',
+                'c': 'text/x-csrc',
+                'csharp': 'text/x-csharp',
+                'go': 'text/x-go',
+                'rust': 'text/x-rustsrc',
+                'php': 'text/x-php',
+                'html': 'text/html',
+                'css': 'text/css'
+            };
+            return modes[language] || 'text/plain';
+        }
+
+        function initializeForms() {
+            // Generate form
+            document.getElementById('generateForm').addEventListener('submit', handleGenerate);
+            document.getElementById('reviewForm').addEventListener('submit', handleReview);
+            document.getElementById('optimizeForm').addEventListener('submit', handleOptimize);
+            document.getElementById('explainForm').addEventListener('submit', handleExplain);
+        }
+
+        async function handleGenerate(e) {
+            e.preventDefault();
+            
+            const formData = {
+                prompt: document.getElementById('prompt').value.trim(),
+                language: document.getElementById('language').value,
+                framework: document.getElementById('framework').value.trim() || null,
+                complexity: document.getElementById('complexity').value,
+                include_comments: document.getElementById('includeComments').checked,
+                include_tests: document.getElementById('includeTests').checked,
+                max_tokens: parseInt(document.getElementById('maxTokens').value),
+                temperature: 0.3
+            };
+
+            if (!formData.prompt) {
+                showError('Please provide a code generation prompt.');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await apiCall('/api/v1/code/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                displayCodeResult(result);
+            } catch (error) {
+                showError('Code generation failed: ' + error.message);
+            }
+        }
+
+        async function handleReview(e) {
+            e.preventDefault();
+            
+            const code = reviewEditor.getValue().trim();
+            if (!code) {
+                showError('Please provide code to review.');
+                return;
+            }
+
+            const focusAreas = [];
+            if (document.getElementById('focusSecurity').checked) focusAreas.push('security');
+            if (document.getElementById('focusPerformance').checked) focusAreas.push('performance');
+            if (document.getElementById('focusReadability').checked) focusAreas.push('readability');
+            if (document.getElementById('focusMaintainability').checked) focusAreas.push('maintainability');
+
+            const formData = {
+                code: code,
+                language: document.getElementById('reviewLanguage').value,
+                focus_areas: focusAreas,
+                severity_level: document.getElementById('severityLevel').value
+            };
+
+            showLoading();
+
+            try {
+                const response = await apiCall('/api/v1/code/review', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                displayReviewResult(result);
+            } catch (error) {
+                showError('Code review failed: ' + error.message);
+            }
+        }
+
+        async function handleOptimize(e) {
+            e.preventDefault();
+            
+            const code = optimizeEditor.getValue().trim();
+            if (!code) {
+                showError('Please provide code to optimize.');
+                return;
+            }
+
+            const optimizationGoals = [];
+            if (document.getElementById('goalPerformance').checked) optimizationGoals.push('performance');
+            if (document.getElementById('goalMemory').checked) optimizationGoals.push('memory_usage');
+            if (document.getElementById('goalReadability').checked) optimizationGoals.push('readability');
+
+            const formData = {
+                code: code,
+                language: document.getElementById('optimizeLanguage').value,
+                optimization_goals: optimizationGoals,
+                preserve_functionality: document.getElementById('preserveFunctionality').checked
+            };
+
+            showLoading();
+
+            try {
+                const response = await apiCall('/api/v1/code/optimize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                displayOptimizeResult(result);
+            } catch (error) {
+                showError('Code optimization failed: ' + error.message);
+            }
+        }
+
+        async function handleExplain(e) {
+            e.preventDefault();
+            
+            const code = explainEditor.getValue().trim();
+            if (!code) {
+                showError('Please provide code to explain.');
+                return;
+            }
+
+            const formData = {
+                code: code,
+                language: document.getElementById('explainLanguage').value,
+                detail_level: document.getElementById('detailLevel').value,
+                include_examples: document.getElementById('includeExamples').checked
+            };
+
+            showLoading();
+
+            try {
+                const response = await apiCall('/api/v1/code/explain', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                displayExplanationResult(result);
+            } catch (error) {
+                showError('Code explanation failed: ' + error.message);
+            }
+        }
+
+        function displayCodeResult(result) {
+            const output = document.getElementById('outputContent');
+            output.innerHTML = `
+                <div class="success"> Code generated successfully!</div>
+                <br>
+                <strong>Generated Code:</strong>
+                <pre style="background: #f8f9fa; padding: 1rem; border-radius: 8px; overflow-x: auto;">${escapeHtml(result.code)}</pre>
+                ${result.explanation ? `<br><strong>Explanation:</strong><br>${escapeHtml(result.explanation)}` : ''}
+                <br><br>
+                <small>Language: ${result.language} | Tokens used: ${result.tokens_used || 'N/A'}</small>
+            `;
+        }
+
+        function displayReviewResult(result) {
+            const output = document.getElementById('outputContent');
+            let html = `
+                <div class="success"> Code review completed!</div>
+                <br>
+                <strong>Overall Score: ${result.score}/100</strong>
+                <br><br>
+                ${result.summary ? `<strong>Summary:</strong><br>${escapeHtml(result.summary)}<br><br>` : ''}
+            `;
+
+            if (result.issues && result.issues.length > 0) {
+                html += '<strong>Issues Found:</strong><br>';
+                result.issues.forEach(issue => {
+                    html += `
+                        <div class="review-item ${issue.severity}">
+                            <div class="review-header">
+                                <span class="review-type">${issue.type}</span>
+                                <span class="review-severity severity-${issue.severity}">${issue.severity}</span>
+                            </div>
+                            <div>${escapeHtml(issue.description)}</div>
+                            ${issue.suggestion ? `<div style="margin-top: 0.5rem; color: var(--success);"><strong>Suggestion:</strong> ${escapeHtml(issue.suggestion)}</div>` : ''}
+                        </div>
+                    `;
+                });
+            }
+
+            if (result.suggestions && result.suggestions.length > 0) {
+                html += '<br><strong>Suggestions:</strong><br>';
+                result.suggestions.forEach(suggestion => {
+                    html += `
+                        <div class="review-item">
+                            <strong>${suggestion.type}:</strong> ${escapeHtml(suggestion.description)}
+                            ${suggestion.benefit ? `<br><small>Benefit: ${escapeHtml(suggestion.benefit)}</small>` : ''}
+                        </div>
+                    `;
+                });
+            }
+
+            output.innerHTML = html;
+        }
+
+        function displayOptimizeResult(result) {
+            const output = document.getElementById('outputContent');
+            output.innerHTML = `
+                <div class="success"> Code optimization completed!</div>
+                <br>
+                <strong>Performance Gain: ${result.performance_gain}</strong>
+                <br><br>
+                <strong>Optimized Code:</strong>
+                <pre style="background: #f8f9fa; padding: 1rem; border-radius: 8px; overflow-x: auto;">${escapeHtml(result.optimized_code)}</pre>
+                ${result.explanation ? `<br><strong>Explanation:</strong><br>${escapeHtml(result.explanation)}` : ''}
+                ${result.improvements && result.improvements.length > 0 ? `<br><br><strong>Improvements Made:</strong><ul>${result.improvements.map(imp => `<li>${escapeHtml(imp)}</li>`).join('')}</ul>` : ''}
+            `;
+        }
+
+        function displayExplanationResult(result) {
+            const output = document.getElementById('outputContent');
+            output.innerHTML = `
+                <div class="success"> Code explanation generated!</div>
+                <br>
+                <strong>Explanation:</strong>
+                <div style="line-height: 1.8;">${escapeHtml(result.explanation).replace(/\n/g, '<br>')}</div>
+                ${result.key_concepts && result.key_concepts.length > 0 ? `<br><br><strong>Key Concepts:</strong><ul>${result.key_concepts.map(concept => `<li>${escapeHtml(concept)}</li>`).join('')}</ul>` : ''}
+                ${result.complexity_analysis ? `<br><br><strong>Complexity Analysis:</strong><br>${escapeHtml(result.complexity_analysis).replace(/\n/g, '<br>')}` : ''}
+                ${result.examples && result.examples.length > 0 ? `<br><br><strong>Examples:</strong><br>${result.examples.map(example => `<pre style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">${escapeHtml(example)}</pre>`).join('')}` : ''}
+            `;
+        }
+
+        function showLoading() {
+            const output = document.getElementById('outputContent');
+            output.innerHTML = '<div class="loading">Generating response...</div>';
+        }
+
+        function showError(message) {
+            const output = document.getElementById('outputContent');
+            output.innerHTML = `<div class="error">L ${escapeHtml(message)}</div>`;
+        }
+
+        async function apiCall(url, options = {}) {
+            const token = await getAuthToken();
+            
+            if (token) {
+                options.headers = {
+                    ...options.headers,
+                    'Authorization': `Bearer ${token}`
+                };
+            }
+            
+            const response = await fetch(url, options);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            return response;
+        }
+
+        async function getAuthToken() {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                return session?.access_token;
+            } catch (error) {
+                console.error('Error getting auth token:', error);
+                return null;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function clearForm() {
+            document.getElementById('generateForm').reset();
+        }
+
+        function clearReviewEditor() {
+            reviewEditor.setValue('');
+        }
+
+        function clearOptimizeEditor() {
+            optimizeEditor.setValue('');
+        }
+
+        function clearExplainEditor() {
+            explainEditor.setValue('');
+        }
+
+        function copyOutput() {
+            const output = document.getElementById('outputContent');
+            const text = output.textContent || output.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Output copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+    </script>
+</body>
+</html>

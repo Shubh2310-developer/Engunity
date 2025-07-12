@@ -94,10 +94,18 @@ class SupabaseAuthService:
     async def get_user_by_token(self, access_token: str) -> Optional[Dict[str, Any]]:
         """Get user information from access token."""
         try:
-            # Set the session and get user
-            response = self.supabase.auth.get_user(access_token)
+            import asyncio
+            # Set the session and get user with timeout
+            response = await asyncio.wait_for(
+                asyncio.to_thread(self.supabase.auth.get_user, access_token),
+                timeout=5.0  # 5 second timeout
+            )
             return response.user if response.user else None
-        except Exception:
+        except asyncio.TimeoutError:
+            print("Authentication timeout - Supabase took too long to respond")
+            return None
+        except Exception as e:
+            print(f"Authentication error: {e}")
             return None
     
     async def refresh_session(self, refresh_token: str) -> Dict[str, Any]:

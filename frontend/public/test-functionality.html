@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Functionality Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        button { padding: 10px 15px; margin: 5px; }
+        textarea { width: 100%; height: 100px; margin: 10px 0; }
+        #results { margin-top: 20px; padding: 10px; background: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <h1>Dashboard Functionality Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Authentication Test</h2>
+        <button onclick="testAuth()">Test Authentication</button>
+        <div id="auth-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Chat API Test</h2>
+        <textarea id="chatMessage" placeholder="Enter test message...">Hello, can you help me write a Python function?</textarea>
+        <br>
+        <button onclick="testChat()">Test Chat API</button>
+        <div id="chat-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Code Generation Test</h2>
+        <textarea id="codePrompt" placeholder="Enter code prompt...">Create a function to calculate factorial</textarea>
+        <br>
+        <button onclick="testCodeGeneration()">Test Code Generation</button>
+        <div id="code-result"></div>
+    </div>
+    
+    <div id="results"></div>
+    
+    <script>
+        // Initialize Supabase
+        const supabaseUrl = 'https://ckrtquhwlvpmpgrfemmb.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrcnRxdWh3bHZwbXBncmZlbW1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2NTE5MjQsImV4cCI6MjA2NTIyNzkyNH0.EKkuLjGdt3BJckM9XtboDCknG5ggt0xwcAI_jI8Al6k';
+        const { createClient } = supabase;
+        const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+        
+        console.log('Supabase client initialized:', supabaseClient);
+        
+        // API utilities
+        const apiUtils = {
+            async apiCall(url, options = {}) {
+                const token = await this.getAuthToken();
+                
+                if (token) {
+                    options.headers = {
+                        ...options.headers,
+                        'Authorization': `Bearer ${token}`
+                    };
+                }
+                
+                const response = await fetch(url, options);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return response;
+            },
+
+            async getAuthToken() {
+                try {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    return session?.access_token;
+                } catch (error) {
+                    console.error('Error getting auth token:', error);
+                    return null;
+                }
+            }
+        };
+        
+        async function testAuth() {
+            const resultDiv = document.getElementById('auth-result');
+            resultDiv.innerHTML = 'Testing authentication...';
+            
+            try {
+                const token = await apiUtils.getAuthToken();
+                if (token) {
+                    resultDiv.innerHTML = '<span class="success">✅ Authentication token found</span>';
+                } else {
+                    resultDiv.innerHTML = '<span class="error">❌ No authentication token (user not logged in)</span>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Auth test failed: ${error.message}</span>`;
+            }
+        }
+        
+        async function testChat() {
+            const resultDiv = document.getElementById('chat-result');
+            const message = document.getElementById('chatMessage').value;
+            
+            resultDiv.innerHTML = 'Testing chat API...';
+            
+            try {
+                const response = await apiUtils.apiCall('/api/v1/ai/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messages: [{ role: 'user', content: message }],
+                        temperature: 0.7,
+                        max_tokens: 1024
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.choices && data.choices[0]) {
+                    resultDiv.innerHTML = `<span class="success">✅ Chat API working!</span><br><strong>Response:</strong> ${data.choices[0].message.content.substring(0, 200)}...`;
+                } else {
+                    resultDiv.innerHTML = '<span class="error">❌ Unexpected response format</span>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Chat test failed: ${error.message}</span>`;
+            }
+        }
+        
+        async function testCodeGeneration() {
+            const resultDiv = document.getElementById('code-result');
+            const prompt = document.getElementById('codePrompt').value;
+            
+            resultDiv.innerHTML = 'Testing code generation API...';
+            
+            try {
+                const response = await apiUtils.apiCall('/api/v1/code/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        language: 'python',
+                        complexity: 'intermediate',
+                        include_comments: true,
+                        include_tests: false,
+                        max_tokens: 1024
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.code) {
+                    resultDiv.innerHTML = `<span class="success">✅ Code generation working!</span><br><strong>Generated code:</strong><pre>${data.code.substring(0, 300)}...</pre>`;
+                } else {
+                    resultDiv.innerHTML = '<span class="error">❌ Unexpected response format</span>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Code generation test failed: ${error.message}</span>`;
+            }
+        }
+        
+        // Run initial auth test
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Test page loaded');
+            testAuth();
+        });
+    </script>
+</body>
+</html>

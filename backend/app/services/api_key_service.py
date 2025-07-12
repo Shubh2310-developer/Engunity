@@ -59,6 +59,14 @@ class APIKeyService:
             "docs_url": "https://huggingface.co/docs/api-inference",
             "signup_url": "https://huggingface.co/join"
         },
+        "groq": {
+            "name": "Groq",
+            "models": ["llama-3.3-70b-versatile", "llama-3.1-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768", "gemma-7b-it"],
+            "default_model": "llama-3.3-70b-versatile",
+            "api_base": "https://api.groq.com/openai/v1",
+            "docs_url": "https://console.groq.com/docs",
+            "signup_url": "https://console.groq.com/"
+        },
     }
     
     def __init__(self, db: Session):
@@ -224,6 +232,15 @@ class APIKeyService:
                 )
                 return response.status_code == 200
                 
+            elif provider == "groq":
+                from groq import Groq
+                client = Groq(api_key=api_key)
+                response = client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[{"role": "user", "content": "Hello"}],
+                    max_tokens=1
+                )
+                return True
                 
         except Exception as e:
             logger.error(f"Error testing {provider} API key: {str(e)}")
@@ -257,8 +274,14 @@ class APIKeyService:
             if user_key:
                 return decrypt_text(user_key.api_key), user_key.provider
         
-        # Fallback to default keys
-        # No fallback keys available since user doesn't have any API keys
+        # Fallback to default keys from settings for Groq
+        if provider == "groq" or provider is None:
+            from ..config.settings import settings
+            if settings.groq_api_key:
+                return settings.groq_api_key, "groq"
+            elif settings.fallback_groq_keys:
+                import random
+                return random.choice(settings.fallback_groq_keys), "groq"
         
         raise ValueError("No working API key found")
     

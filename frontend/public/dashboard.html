@@ -191,10 +191,45 @@
             50% { transform: rotate(180deg) scale(1.1); }
             100% { transform: rotate(360deg) scale(1); }
         }
-            100% {
-                transform: scale(1.1);
-                box-shadow: 0 0 60px rgba(59, 130, 246, 1), 0 0 120px rgba(59, 130, 246, 0.6);
+        
+        @keyframes typingDot {
+            0%, 60%, 100% {
+                transform: scale(1);
+                opacity: 0.7;
             }
+            30% {
+                transform: scale(1.4);
+                opacity: 1;
+            }
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.3;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        /* ChatGPT-style scrollbars */
+        #chatMessagesArea::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #chatMessagesArea::-webkit-scrollbar-track {
+            background: #40414f;
+        }
+
+        #chatMessagesArea::-webkit-scrollbar-thumb {
+            background: #565869;
+            border-radius: 2px;
+        }
+
+        #chatMessagesArea::-webkit-scrollbar-thumb:hover {
+            background: #676b7a;
         }
 
         .orbital-layer {
@@ -1458,7 +1493,7 @@
                 <div class="sidebar-title">AI Tools</div>
                 <ul class="sidebar-menu">
                     <li class="sidebar-item">
-                        <a href="#chat" class="sidebar-link active" data-route="chat" role="menuitem">
+                        <a href="/pages/chat-interface.html" class="sidebar-link active" data-route="chat" role="menuitem">
                             <span class="sidebar-icon">🧠</span>
                             <span>AI Chatbot</span>
                         </a>
@@ -1593,7 +1628,7 @@
 
             <!-- Enhanced Quick Actions -->
             <section class="quick-actions animate-section">
-                <a href="#chat" class="action-card" data-route="chat" role="button">
+                <a href="/pages/chat-interface.html" class="action-card" data-route="chat" role="button">
                     <div class="action-icon">💬</div>
                     <div class="action-title">Start AI Chat</div>
                     <div class="action-description">Engage with advanced AI models</div>
@@ -1622,7 +1657,7 @@
                     <div class="widget-card">
                         <div class="widget-header">
                             <h3 class="widget-title">Recent Conversations</h3>
-                            <a href="#chat" class="widget-action">View All</a>
+                            <a href="/pages/chat-interface.html" class="widget-action">View All</a>
                         </div>
                         <div class="recent-items">
                             <div class="recent-item">
@@ -1962,14 +1997,14 @@
                             <div class="chat-header" style="padding: 1.5rem; border-bottom: 1px solid var(--border-primary); display: flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <h3 style="margin: 0; color: var(--text-primary);">Neural Assistant</h3>
-                                    <p style="margin: 0; color: var(--text-tertiary); font-size: 0.875rem;">GPT-4 Turbo • Real-time processing</p>
+                                    <p style="margin: 0; color: var(--text-tertiary); font-size: 0.875rem;">Llama 3.3 70B • Real-time processing</p>
                                 </div>
                                 <div style="display: flex; gap: 0.5rem;">
                                     <button style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 8px; padding: 0.5rem; color: var(--text-secondary); cursor: pointer;">⚙️</button>
                                     <button style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 8px; padding: 0.5rem; color: var(--text-secondary); cursor: pointer;">📎</button>
                                 </div>
                             </div>
-                            <div class="chat-messages" style="flex: 1; padding: 1.5rem; overflow-y: auto;">
+                            <div class="chat-messages" id="chatMessages" style="flex: 1; padding: 1.5rem; overflow-y: auto;">
                                 <div class="message assistant" style="display: flex; gap: 1rem; margin-bottom: 2rem; animation: slideInLeft 0.5s ease;">
                                     <div style="width: 40px; height: 40px; border-radius: 12px; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; flex-shrink: 0;">AI</div>
                                     <div style="flex: 1; background: var(--bg-glass); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border-primary);">
@@ -1980,9 +2015,9 @@
                             <div class="chat-input-container" style="border-top: 1px solid var(--border-primary); padding: 1.5rem;">
                                 <div class="chat-input-wrapper" style="display: flex; gap: 1rem; align-items: flex-end;">
                                     <div style="flex: 1; position: relative;">
-                                        <textarea placeholder="Ask me anything..." rows="1" style="width: 100%; background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 12px; padding: 1rem; color: var(--text-primary); resize: none; font-family: inherit; line-height: 1.5;"></textarea>
+                                        <textarea id="chatInput" placeholder="Ask me anything..." rows="1" style="width: 100%; background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 12px; padding: 1rem; color: var(--text-primary); resize: none; font-family: inherit; line-height: 1.5;"></textarea>
                                     </div>
-                                    <button style="background: var(--gradient-primary); border: none; border-radius: 12px; padding: 1rem 1.5rem; color: white; cursor: pointer; font-weight: 600; transition: all 0.3s ease; box-shadow: var(--shadow-md);">Send</button>
+                                    <button id="sendButton" style="background: var(--gradient-primary); border: none; border-radius: 12px; padding: 1rem 1.5rem; color: white; cursor: pointer; font-weight: 600; transition: all 0.3s ease; box-shadow: var(--shadow-md);">Send</button>
                                 </div>
                                 <div style="display: flex; gap: 1rem; margin-top: 1rem; color: var(--text-tertiary); font-size: 0.875rem;">
                                     <span>💡 Try: "Explain quantum computing" or "Write a Python function"</span>
@@ -1991,7 +2026,191 @@
                         </div>
                     </div>
                 `;
+                
+                // Add event listeners for chat functionality
+                this.setupChatEventListeners();
             }
+
+            setupChatEventListeners() {
+                // Use setTimeout to ensure DOM elements are ready
+                setTimeout(() => {
+                    const chatInput = document.getElementById('chatInput');
+                    const sendButton = document.getElementById('sendButton');
+                    
+                    console.log('Setting up chat listeners. chatInput:', chatInput, 'sendButton:', sendButton);
+                    
+                    if (chatInput && sendButton) {
+                        // Handle send button click
+                        sendButton.addEventListener('click', () => {
+                            console.log('Send button clicked');
+                            this.sendMessage();
+                        });
+                        
+                        // Handle Enter key press in textarea
+                        chatInput.addEventListener('keypress', (e) => {
+                            console.log('Key pressed:', e.key);
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                this.sendMessage();
+                            }
+                        });
+                        
+                        // Auto-resize textarea
+                        chatInput.addEventListener('input', () => {
+                            chatInput.style.height = 'auto';
+                            chatInput.style.height = chatInput.scrollHeight + 'px';
+                        });
+                        
+                        console.log('Chat event listeners set up successfully');
+                    } else {
+                        console.error('Chat elements not found!', {chatInput, sendButton});
+                    }
+                }, 100);
+            }
+
+            async sendMessage() {
+                console.log('sendMessage called');
+                const chatInput = document.getElementById('chatInput');
+                const message = chatInput?.value?.trim();
+                
+                console.log('Chat input element:', chatInput);
+                console.log('Message:', message);
+                
+                if (!message) {
+                    console.log('No message provided');
+                    return;
+                }
+                
+                // Clear input and reset height
+                chatInput.value = '';
+                chatInput.style.height = 'auto';
+                
+                // Add user message to chat
+                this.addMessageToChat('user', message);
+                
+                // Show typing indicator
+                this.showTypingIndicator();
+                
+                try {
+                    // Get or create chat
+                    const chatId = await this.getOrCreateChat();
+                    console.log('Chat ID:', chatId);
+                    
+                    // Send message to AI
+                    const response = await this.sendToAI(message, chatId);
+                    console.log('AI response:', response);
+                    
+                    // Hide typing indicator
+                    this.hideTypingIndicator();
+                    
+                    // Add AI response to chat
+                    this.addMessageToChat('assistant', response);
+                    
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                    this.hideTypingIndicator();
+                    this.addMessageToChat('assistant', 'Sorry, I encountered an error. Please try again.');
+                }
+            }
+
+            addMessageToChat(role, content) {
+                const chatMessages = document.getElementById('chatMessages');
+                const messageElement = document.createElement('div');
+                
+                if (role === 'user') {
+                    messageElement.innerHTML = `
+                        <div class="message user" style="display: flex; gap: 1rem; margin-bottom: 2rem; animation: slideInRight 0.5s ease; flex-direction: row-reverse;">
+                            <div style="width: 40px; height: 40px; border-radius: 12px; background: var(--gradient-gold); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; flex-shrink: 0;">U</div>
+                            <div style="flex: 1; background: var(--bg-quaternary); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border-secondary);">
+                                <p style="margin: 0; line-height: 1.6;">${content}</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    messageElement.innerHTML = `
+                        <div class="message assistant" style="display: flex; gap: 1rem; margin-bottom: 2rem; animation: slideInLeft 0.5s ease;">
+                            <div style="width: 40px; height: 40px; border-radius: 12px; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; flex-shrink: 0;">AI</div>
+                            <div style="flex: 1; background: var(--bg-glass); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border-primary);">
+                                <p style="margin: 0; line-height: 1.6;">${content}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                chatMessages.appendChild(messageElement);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            showTypingIndicator() {
+                const chatMessages = document.getElementById('chatMessages');
+                const typingElement = document.createElement('div');
+                typingElement.id = 'typingIndicator';
+                typingElement.innerHTML = `
+                    <div class="message assistant" style="display: flex; gap: 1rem; margin-bottom: 2rem; animation: slideInLeft 0.5s ease;">
+                        <div style="width: 40px; height: 40px; border-radius: 12px; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; flex-shrink: 0;">AI</div>
+                        <div style="flex: 1; background: var(--bg-glass); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border-primary);">
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <div class="typing-dots" style="display: flex; gap: 0.25rem;">
+                                    <div style="width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: typingDot 1.5s infinite;"></div>
+                                    <div style="width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: typingDot 1.5s infinite 0.2s;"></div>
+                                    <div style="width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: typingDot 1.5s infinite 0.4s;"></div>
+                                </div>
+                                <span style="color: var(--text-tertiary); font-size: 0.875rem;">AI is thinking...</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                chatMessages.appendChild(typingElement);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            hideTypingIndicator() {
+                const typingIndicator = document.getElementById('typingIndicator');
+                if (typingIndicator) {
+                    typingIndicator.remove();
+                }
+            }
+
+            async getOrCreateChat() {
+                // For now, we'll use a temporary chat session to bypass chat creation issues
+                if (!this.currentChatId) {
+                    // Generate a temporary ID for this session
+                    this.currentChatId = 'temp_' + Date.now();
+                    console.log('Using temporary chat ID:', this.currentChatId);
+                }
+                return this.currentChatId;
+            }
+
+            async sendToAI(message, chatId) {
+                try {
+                    // Use simple test endpoint temporarily
+                    const response = await fetch(`/api/v1/test/ai?message=${encodeURIComponent(message)}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log('Test AI response:', data);
+                    
+                    if (data.status === 'success' && data.response?.choices && data.response.choices.length > 0) {
+                        return data.response.choices[0].message.content;
+                    } else if (data.status === 'error') {
+                        throw new Error(data.error);
+                    } else {
+                        throw new Error('Unexpected response format');
+                    }
+                } catch (error) {
+                    console.error('Error calling AI API:', error);
+                    throw error;
+                }
+            }
+
 
             loadCodeAssistant() {
                 document.getElementById('mainContent').innerHTML = `
@@ -1999,57 +2218,469 @@
                         <div class="page-header" style="margin-bottom: 2rem;">
                             <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Code Assistant</h1>
                             <p style="color: var(--text-secondary); font-size: 1.125rem;">Generate, debug, and optimize code with AI-powered assistance</p>
+                            <div style="margin-top: 1rem;">
+                                <button onclick="window.open('/pages/code-assistant.html', '_blank')" style="background: var(--accent-gradient); border: none; border-radius: 8px; padding: 0.75rem 1.5rem; color: white; cursor: pointer; font-weight: 600; margin-right: 1rem;">🚀 Advanced Code Assistant</button>
+                                <span style="color: var(--text-muted); font-size: 0.875rem;">Open the full-featured code assistant in a new tab</span>
+                            </div>
                         </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; height: 75vh;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; height: 65vh;">
                             <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; backdrop-filter: var(--blur-lg);">
-                                <h3 style="margin-bottom: 1.5rem; font-weight: 700;">Code Generation</h3>
-                                <textarea placeholder="Describe what you want to build..." style="width: 100%; height: 200px; background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 12px; padding: 1rem; color: var(--text-main); resize: vertical; margin-bottom: 1rem; font-family: inherit;"></textarea>
-                                <div style="margin-bottom: 1rem;">
-                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Language:</label>
-                                    <select id="code-language-select" style="background: var(--bg-card); border: 1px solid var(--border-main); border-radius: 8px; padding: 0.75rem; color: var(--text-main); width: 100%;">
-                                        <option style="color: var(--text-main); background: var(--bg-card);">Python</option>
-                                        <option style="color: var(--text-main); background: var(--bg-card);">JavaScript</option>
-                                        <option style="color: var(--text-main); background: var(--bg-card);">TypeScript</option>
-                                        <option style="color: var(--text-main); background: var(--bg-card);">Java</option>
-                                        <option style="color: var(--text-main); background: var(--bg-card);">C++</option>
-                                        <option style="color: var(--text-main); background: var(--bg-card);">Rust</option>
-                                        <option style="color: var(--text-main); background: var(--bg-card);">Go</option>
-                                    </select>
+                                <h3 style="margin-bottom: 1.5rem; font-weight: 700;">Quick Code Generation</h3>
+                                <textarea id="codePrompt" placeholder="Describe what you want to build...&#10;&#10;Examples:&#10;• Create a function to sort an array of objects&#10;• Build a REST API endpoint for user authentication&#10;• Write a Python class for handling file operations" style="width: 100%; height: 200px; background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 12px; padding: 1rem; color: var(--text-main); resize: vertical; margin-bottom: 1rem; font-family: inherit;"></textarea>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                                    <div>
+                                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Language:</label>
+                                        <select id="codeLanguageSelect" style="background: var(--bg-card); border: 1px solid var(--border-main); border-radius: 8px; padding: 0.75rem; color: var(--text-main); width: 100%;">
+                                            <option value="python">Python</option>
+                                            <option value="javascript">JavaScript</option>
+                                            <option value="typescript">TypeScript</option>
+                                            <option value="java">Java</option>
+                                            <option value="cpp">C++</option>
+                                            <option value="rust">Rust</option>
+                                            <option value="go">Go</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Complexity:</label>
+                                        <select id="codeComplexity" style="background: var(--bg-card); border: 1px solid var(--border-main); border-radius: 8px; padding: 0.75rem; color: var(--text-main); width: 100%;">
+                                            <option value="beginner">Beginner</option>
+                                            <option value="intermediate" selected>Intermediate</option>
+                                            <option value="advanced">Advanced</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <button id="generate-code-btn" style="background: var(--accent-gradient); border: none; border-radius: 12px; padding: 1rem 2rem; color: white; cursor: pointer; width: 100%; font-weight: 600; box-shadow: var(--shadow-md);">Generate Code</button>
-                                <div id="complexity-block" style="background: var(--bg-glass); border: 1px solid var(--border-primary); border-radius: 10px; padding: 1.2rem 1rem; margin-top: 1.2rem; display: none; flex-direction: column; gap: 0.5rem;">
-                                    <div style="font-weight: 600; color: var(--accent); margin-bottom: 0.3rem;">Complexity Analysis</div>
-                                    <div style="display: flex; gap: 2rem;">
-                                        <div><span style="font-weight: 500; color: var(--text-secondary);">Time Complexity:</span> <span id="time-complexity" style="font-weight: 600; color: var(--text-main);">O(n)</span></div>
-                                        <div><span style="font-weight: 500; color: var(--text-secondary);">Space Complexity:</span> <span id="space-complexity" style="font-weight: 600; color: var(--text-main);">O(n)</span></div>
+                                <div style="margin-bottom: 1rem;">
+                                    <label style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                        <input type="checkbox" id="includeComments" checked style="width: 16px; height: 16px;">
+                                        <span style="font-weight: 500;">Include Comments</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <input type="checkbox" id="includeTests" style="width: 16px; height: 16px;">
+                                        <span style="font-weight: 500;">Include Tests</span>
+                                    </label>
+                                </div>
+                                <button id="generateCodeBtn" style="background: var(--accent-gradient); border: none; border-radius: 12px; padding: 1rem 2rem; color: white; cursor: pointer; width: 100%; font-weight: 600; box-shadow: var(--shadow-md);">Generate Code</button>
+                            </div>
+                            <!-- ChatGPT-style Code Generation Interface -->
+                            <div style="background: #1e1e1e; border: 1px solid #343541; border-radius: 16px; display: flex; flex-direction: column; height: 600px; overflow: hidden;">
+                                <!-- ChatGPT Header -->
+                                <div style="display: flex; justify-content: between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid #343541; background: #202123;">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                        <div style="width: 28px; height: 28px; background: #10a37f; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                                                <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.078 6.078 0 0 0 6.525 2.9 5.973 5.973 0 0 0 4.233 1.723c4.014 0 6.301-5.248 3.67-8.693a6.034 6.034 0 0 0 5.618-4.597zm-6.423 4.063a4.195 4.195 0 0 1-1.91 1.91 4.195 4.195 0 0 1-1.91-1.91 4.195 4.195 0 0 1 1.91-1.91 4.195 4.195 0 0 1 1.91 1.91z"/>
+                                            </svg>
+                                        </div>
+                                        <h3 style="margin: 0; font-weight: 600; color: #ececf1; font-size: 1rem;">AI Code Generator</h3>
+                                    </div>
+                                    <button id="clearChatBtn" style="background: transparent; border: 1px solid #565869; border-radius: 6px; padding: 0.5rem 0.75rem; color: #c5c5d2; cursor: pointer; font-size: 0.875rem; transition: all 0.2s;" onmouseover="this.style.background='#343541'" onmouseout="this.style.background='transparent'">Clear chat</button>
+                                </div>
+                                
+                                <!-- Chat Messages Area - ChatGPT Style -->
+                                <div id="chatMessagesArea" style="flex: 1; overflow-y: auto; background: #343541;">
+                                    <div style="padding: 1.5rem;">
+                                        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                                            <div style="width: 30px; height: 30px; background: #10a37f; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                                                    <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.078 6.078 0 0 0 6.525 2.9 5.973 5.973 0 0 0 4.233 1.723c4.014 0 6.301-5.248 3.67-8.693a6.034 6.034 0 0 0 5.618-4.597zm-6.423 4.063a4.195 4.195 0 0 1-1.91 1.91 4.195 4.195 0 0 1-1.91-1.91 4.195 4.195 0 0 1 1.91-1.91 4.195 4.195 0 0 1 1.91 1.91z"/>
+                                                </svg>
+                                            </div>
+                                            <div style="flex: 1;">
+                                                <div style="color: #ececf1; line-height: 1.6; font-size: 0.95rem;">
+                                                    👋 Hello! I'm your AI Code Generator. I can help you with:
+                                                    <br><br>
+                                                    • <strong style="color: #10a37f;">Generate code</strong> in any programming language
+                                                    <br>• <strong style="color: #10a37f;">Debug and fix</strong> existing code
+                                                    <br>• <strong style="color: #10a37f;">Explain concepts</strong> and provide examples
+                                                    <br>• <strong style="color: #10a37f;">Optimize performance</strong> and suggest improvements
+                                                    <br><br>
+                                                    <span style="color: #c5c5d2;">What would you like me to help you with today?</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- ChatGPT Input Area -->
+                                <div style="padding: 1rem 1.5rem; border-top: 1px solid #343541; background: #202123;">
+                                    <div style="position: relative; background: #40414f; border-radius: 12px; border: 1px solid #565869;">
+                                        <textarea 
+                                            id="chatInputField" 
+                                            placeholder="Message ChatGPT..." 
+                                            style="width: 100%; background: transparent; border: none; padding: 1rem 3rem 1rem 1rem; color: #ececf1; resize: none; font-family: inherit; line-height: 1.5; min-height: 24px; max-height: 200px; outline: none; font-size: 0.95rem;"
+                                            rows="1"
+                                        ></textarea>
+                                        <button 
+                                            id="sendChatBtn" 
+                                            style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: #19c37d; border: none; border-radius: 6px; padding: 0.5rem; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;"
+                                            onmouseover="this.style.background='#10a37f'" 
+                                            onmouseout="this.style.background='#19c37d'"
+                                            disabled
+                                        >
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M7 11v8l10-6-10-6v2l6 2-6 2z"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <div style="margin-top: 0.5rem; text-align: center;">
+                                        <span style="color: #8e8ea0; font-size: 0.75rem;">ChatGPT can make mistakes. Consider checking important information.</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Typing Indicator -->
+                                <div id="chatTypingIndicator" style="display: none; padding: 1.5rem; background: #444654;">
+                                    <div style="display: flex; gap: 1rem;">
+                                        <div style="width: 30px; height: 30px; background: #10a37f; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                                                <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.078 6.078 0 0 0 6.525 2.9 5.973 5.973 0 0 0 4.233 1.723c4.014 0 6.301-5.248 3.67-8.693a6.034 6.034 0 0 0 5.618-4.597zm-6.423 4.063a4.195 4.195 0 0 1-1.91 1.91 4.195 4.195 0 0 1-1.91-1.91 4.195 4.195 0 0 1 1.91-1.91 4.195 4.195 0 0 1 1.91 1.91z"/>
+                                            </svg>
+                                        </div>
+                                        <div style="flex: 1; display: flex; align-items: center; gap: 0.5rem;">
+                                            <div style="display: flex; gap: 2px;">
+                                                <div style="width: 8px; height: 8px; background: #10a37f; border-radius: 50%; animation: typing 1.4s infinite ease-in-out;"></div>
+                                                <div style="width: 8px; height: 8px; background: #10a37f; border-radius: 50%; animation: typing 1.4s infinite ease-in-out; animation-delay: 0.2s;"></div>
+                                                <div style="width: 8px; height: 8px; background: #10a37f; border-radius: 50%; animation: typing 1.4s infinite ease-in-out; animation-delay: 0.4s;"></div>
+                                            </div>
+                                            <span style="color: #c5c5d2; font-size: 0.9rem;">ChatGPT is typing...</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div style="background: var(--bg-card); border: 1px solid var(--border-primary); border-radius: 16px; padding: 2rem; backdrop-filter: var(--blur-lg);">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                                    <h3 style="margin: 0; font-weight: 700;">Generated Code</h3>
-                                    <button style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 8px; padding: 0.5rem 1rem; color: var(--text-secondary); cursor: pointer;">📋 Copy</button>
-                                </div>
-                                <div style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 12px; padding: 1.5rem; height: calc(100% - 80px); overflow-x: auto; font-family: 'JetBrains Mono', monospace;">
-                                    <pre style="margin: 0; color: var(--text-main);"><code># Your generated code will appear here...
-def fibonacci(n):
-    """Generate fibonacci sequence up to n terms"""
-    if n <= 0:
-        return []
-    elif n == 1:
-        return [0]
-    elif n == 2:
-        return [0, 1]
-    
-    sequence = [0, 1]
-    for i in range(2, n):
-        sequence.append(sequence[i-1] + sequence[i-2])
-    
-    return sequence
+                        </div>
+                    </div>
+                `;
+                
+                // Setup code generation functionality
+                this.setupCodeGenerationHandlers();
+            }
 
-# Example usage
-print(fibonacci(10))
-# Output: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]</code></pre>
+            setupCodeGenerationHandlers() {
+                // Use setTimeout to ensure DOM elements are ready
+                setTimeout(() => {
+                    const generateBtn = document.getElementById('generateCodeBtn');
+                    const copyBtn = document.getElementById('copyCodeBtn');
+                    const sendChatBtn = document.getElementById('sendChatBtn');
+                    const chatInputField = document.getElementById('chatInputField');
+                    const clearChatBtn = document.getElementById('clearChatBtn');
+                    
+                    console.log('Setting up code generation handlers. generateBtn:', generateBtn, 'copyBtn:', copyBtn);
+                    
+                    if (generateBtn) {
+                        generateBtn.addEventListener('click', () => {
+                            console.log('Generate code button clicked');
+                            this.generateCode();
+                        });
+                    }
+                    
+                    if (copyBtn) {
+                        copyBtn.addEventListener('click', () => {
+                            console.log('Copy code button clicked');
+                            this.copyGeneratedCode();
+                        });
+                    }
+
+                    // Setup chat functionality
+                    if (sendChatBtn) {
+                        sendChatBtn.addEventListener('click', () => {
+                            this.sendChatMessage();
+                        });
+                    }
+
+                    if (chatInputField) {
+                        chatInputField.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                this.sendChatMessage();
+                            }
+                        });
+
+                        // Auto-resize textarea and enable/disable send button
+                        chatInputField.addEventListener('input', function() {
+                            this.style.height = 'auto';
+                            this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+                            
+                            // Enable/disable send button based on input
+                            const sendBtn = document.getElementById('sendChatBtn');
+                            if (sendBtn) {
+                                const hasText = this.value.trim().length > 0;
+                                sendBtn.disabled = !hasText;
+                                sendBtn.style.background = hasText ? '#19c37d' : '#565869';
+                                sendBtn.style.cursor = hasText ? 'pointer' : 'not-allowed';
+                            }
+                        });
+
+                        // Initial state
+                        const sendBtn = document.getElementById('sendChatBtn');
+                        if (sendBtn) {
+                            sendBtn.disabled = true;
+                            sendBtn.style.background = '#565869';
+                            sendBtn.style.cursor = 'not-allowed';
+                        }
+                    }
+
+                    if (clearChatBtn) {
+                        clearChatBtn.addEventListener('click', () => {
+                            this.clearChat();
+                        });
+                    }
+                    
+                    console.log('Code generation and chat handlers set up successfully');
+                }, 100);
+            }
+
+            async generateCode() {
+                const prompt = document.getElementById('codePrompt').value.trim();
+                const language = document.getElementById('codeLanguageSelect').value;
+                const complexity = document.getElementById('codeComplexity').value;
+                const includeComments = document.getElementById('includeComments').checked;
+                const includeTests = document.getElementById('includeTests').checked;
+                
+                if (!prompt) {
+                    this.showCodeError('Please describe what you want to build.');
+                    return;
+                }
+                
+                this.showCodeLoading();
+                
+                try {
+                    const response = await window.apiUtils.apiCall('/api/v1/code/generate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            prompt: prompt,
+                            language: language,
+                            complexity: complexity,
+                            include_comments: includeComments,
+                            include_tests: includeTests,
+                            max_tokens: 2048
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    this.displayGeneratedCode(result);
+                } catch (error) {
+                    this.showCodeError('Code generation failed: ' + error.message);
+                }
+            }
+
+            displayGeneratedCode(result) {
+                const output = document.getElementById('codeOutput');
+                output.innerHTML = `
+                    <div style="margin-bottom: 1rem; padding: 0.75rem; background: var(--bg-glass); border-radius: 8px; border-left: 4px solid var(--success);">
+                        <strong style="color: var(--success);">✅ Code generated successfully!</strong>
+                        <div style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-muted);">
+                            Language: ${result.language} | Tokens: ${result.tokens_used || 'N/A'}
+                        </div>
+                    </div>
+                    <pre style="margin: 0; white-space: pre-wrap; color: var(--text-main);">${this.escapeHtml(result.code)}</pre>
+                    ${result.explanation ? `<div style="margin-top: 1rem; padding: 0.75rem; background: var(--bg-glass); border-radius: 8px;"><strong>Explanation:</strong><br>${this.escapeHtml(result.explanation).replace(/\n/g, '<br>')}</div>` : ''}
+                `;
+            }
+
+            showCodeLoading() {
+                const output = document.getElementById('codeOutput');
+                output.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: center; padding: 2rem; color: var(--text-muted);">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div style="width: 20px; height: 20px; border: 2px solid var(--border-main); border-top: 2px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                            Generating code...
+                        </div>
+                    </div>
+                `;
+            }
+
+            showCodeError(message) {
+                const output = document.getElementById('codeOutput');
+                output.innerHTML = `
+                    <div style="padding: 1rem; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--error); border-radius: 8px; color: var(--error);">
+                        <strong>❌ Error:</strong> ${this.escapeHtml(message)}
+                    </div>
+                `;
+            }
+
+            copyGeneratedCode() {
+                const output = document.getElementById('codeOutput');
+                const codeElement = output.querySelector('pre');
+                
+                if (codeElement) {
+                    const text = codeElement.textContent;
+                    navigator.clipboard.writeText(text).then(() => {
+                        // Show feedback
+                        const copyBtn = document.getElementById('copyCodeBtn');
+                        const originalText = copyBtn.innerHTML;
+                        copyBtn.innerHTML = '✅ Copied!';
+                        setTimeout(() => {
+                            copyBtn.innerHTML = originalText;
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Failed to copy code:', err);
+                    });
+                } else {
+                    alert('No code to copy. Generate some code first!');
+                }
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            async sendChatMessage() {
+                const chatInputField = document.getElementById('chatInputField');
+                const message = chatInputField.value.trim();
+                
+                if (!message) return;
+
+                // Add user message to chat
+                this.addChatMessage('user', message);
+                chatInputField.value = '';
+                chatInputField.style.height = 'auto';
+
+                // Show typing indicator
+                this.showChatTyping();
+
+                try {
+                    const response = await window.apiUtils.apiCall('/api/v1/integrated-chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            message: message,
+                            save_conversation: true,
+                            auto_detect_code: true
+                        })
+                    });
+
+                    const result = await response.json();
+                    
+                    // Hide typing indicator
+                    this.hideChatTyping();
+                    
+                    // Add AI response
+                    this.addChatMessage('assistant', result.response, result.metadata);
+                    
+                } catch (error) {
+                    console.error('Chat error:', error);
+                    this.hideChatTyping();
+                    this.addChatMessage('assistant', 'Sorry, I encountered an error. Please try again.');
+                }
+            }
+
+            addChatMessage(role, content, metadata = {}) {
+                const chatMessagesArea = document.getElementById('chatMessagesArea');
+                const messageDiv = document.createElement('div');
+                
+                const isUser = role === 'user';
+                
+                // Process markdown-style code blocks with ChatGPT styling
+                let processedContent = content.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, language, code) => {
+                    const lang = language || 'text';
+                    const codeId = 'code_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                    return `
+                        <div style="margin: 1rem 0; background: #2d2d2d; border-radius: 8px; overflow: hidden; border: 1px solid #444;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 0.5rem 1rem; border-bottom: 1px solid #444;">
+                                <span style="font-size: 0.8rem; color: #aaa; font-family: monospace;">${lang}</span>
+                                <button onclick="navigator.clipboard.writeText(document.getElementById('${codeId}').textContent); this.textContent='✓ Copied'; setTimeout(() => this.textContent='Copy code', 1500)" style="background: #444; border: none; color: #ccc; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem; transition: background 0.2s;" onmouseover="this.style.background='#555'" onmouseout="this.style.background='#444'">Copy code</button>
+                            </div>
+                            <pre id="${codeId}" style="margin: 0; padding: 1rem; overflow-x: auto; background: #1e1e1e; color: #e1e7ef; font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; font-size: 0.9rem; line-height: 1.4;"><code>${this.escapeHtml(code.trim())}</code></pre>
+                        </div>
+                    `;
+                });
+                
+                // Process inline code with ChatGPT styling
+                processedContent = processedContent.replace(/`([^`]+)`/g, '<code style="background: #374151; color: #e5e7eb; padding: 0.2rem 0.4rem; border-radius: 4px; font-family: monospace; font-size: 0.9em;">$1</code>');
+                
+                // Process line breaks
+                processedContent = processedContent.replace(/\n/g, '<br>');
+                
+                if (isUser) {
+                    // User message with ChatGPT styling
+                    messageDiv.innerHTML = `
+                        <div style="padding: 1.5rem; background: #343541;">
+                            <div style="display: flex; gap: 1rem;">
+                                <div style="width: 30px; height: 30px; background: #5436da; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: white; font-weight: 600; font-size: 0.9rem;">U</div>
+                                <div style="flex: 1; color: #ececf1; line-height: 1.6; font-size: 0.95rem;">
+                                    ${processedContent}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Assistant message with ChatGPT styling
+                    messageDiv.innerHTML = `
+                        <div style="padding: 1.5rem; background: #444654;">
+                            <div style="display: flex; gap: 1rem;">
+                                <div style="width: 30px; height: 30px; background: #10a37f; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                                        <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.078 6.078 0 0 0 6.525 2.9 5.973 5.973 0 0 0 4.233 1.723c4.014 0 6.301-5.248 3.67-8.693a6.034 6.034 0 0 0 5.618-4.597zm-6.423 4.063a4.195 4.195 0 0 1-1.91 1.91 4.195 4.195 0 0 1-1.91-1.91 4.195 4.195 0 0 1 1.91-1.91 4.195 4.195 0 0 1 1.91 1.91z"/>
+                                    </svg>
+                                </div>
+                                <div style="flex: 1; color: #ececf1; line-height: 1.6; font-size: 0.95rem;">
+                                    ${processedContent}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                chatMessagesArea.appendChild(messageDiv);
+                chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
+            }
+
+            showChatTyping() {
+                const chatMessagesArea = document.getElementById('chatMessagesArea');
+                const typingDiv = document.createElement('div');
+                typingDiv.id = 'chatTypingIndicator';
+                typingDiv.innerHTML = `
+                    <div style="padding: 1.5rem; background: #444654;">
+                        <div style="display: flex; gap: 1rem;">
+                            <div style="width: 30px; height: 30px; background: #10a37f; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                                    <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.078 6.078 0 0 0 6.525 2.9 5.973 5.973 0 0 0 4.233 1.723c4.014 0 6.301-5.248 3.67-8.693a6.034 6.034 0 0 0 5.618-4.597zm-6.423 4.063a4.195 4.195 0 0 1-1.91 1.91 4.195 4.195 0 0 1-1.91-1.91 4.195 4.195 0 0 1 1.91-1.91 4.195 4.195 0 0 1 1.91 1.91z"/>
+                                </svg>
+                            </div>
+                            <div style="flex: 1; display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="display: flex; gap: 2px;">
+                                    <div style="width: 8px; height: 8px; background: #10a37f; border-radius: 50%; animation: typing 1.4s infinite ease-in-out;"></div>
+                                    <div style="width: 8px; height: 8px; background: #10a37f; border-radius: 50%; animation: typing 1.4s infinite ease-in-out; animation-delay: 0.2s;"></div>
+                                    <div style="width: 8px; height: 8px; background: #10a37f; border-radius: 50%; animation: typing 1.4s infinite ease-in-out; animation-delay: 0.4s;"></div>
+                                </div>
+                                <span style="color: #c5c5d2; font-size: 0.9rem;">ChatGPT is typing...</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                chatMessagesArea.appendChild(typingDiv);
+                chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
+            }
+
+            hideChatTyping() {
+                const typingIndicator = document.getElementById('chatTypingIndicator');
+                if (typingIndicator) {
+                    typingIndicator.remove();
+                }
+            }
+
+            clearChat() {
+                const chatMessagesArea = document.getElementById('chatMessagesArea');
+                chatMessagesArea.innerHTML = `
+                    <div style="padding: 1.5rem;">
+                        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                            <div style="width: 30px; height: 30px; background: #10a37f; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                                    <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.078 6.078 0 0 0 6.525 2.9 5.973 5.973 0 0 0 4.233 1.723c4.014 0 6.301-5.248 3.67-8.693a6.034 6.034 0 0 0 5.618-4.597zm-6.423 4.063a4.195 4.195 0 0 1-1.91 1.91 4.195 4.195 0 0 1-1.91-1.91 4.195 4.195 0 0 1 1.91-1.91 4.195 4.195 0 0 1 1.91 1.91z"/>
+                                </svg>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="color: #ececf1; line-height: 1.6; font-size: 0.95rem;">
+                                    👋 Hello! I'm your AI Code Generator. I can help you with:
+                                    <br><br>
+                                    • <strong style="color: #10a37f;">Generate code</strong> in any programming language
+                                    <br>• <strong style="color: #10a37f;">Debug and fix</strong> existing code
+                                    <br>• <strong style="color: #10a37f;">Explain concepts</strong> and provide examples
+                                    <br>• <strong style="color: #10a37f;">Optimize performance</strong> and suggest improvements
+                                    <br><br>
+                                    <span style="color: #c5c5d2;">What would you like me to help you with today?</span>
                                 </div>
                             </div>
                         </div>
@@ -2696,6 +3327,7 @@ First 5 rows:
                                             <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
                                                 <select id="providerSelect" style="flex: 1; background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 8px; padding: 0.75rem; color: var(--text-primary);">
                                                     <option value="">Select Provider</option>
+                                                    <option value="groq">Groq</option>
                                                     <option value="openai">OpenAI</option>
                                                     <option value="gemini">Google Gemini</option>
                                                     <option value="together">Together.ai</option>
@@ -3521,6 +4153,7 @@ First 5 rows:
 
         function getProviderIcon(provider) {
             const icons = {
+                'groq': '⚡',
                 'openai': '🤖',
                 'gemini': '💎',
                 'together': '🤝',
@@ -4012,18 +4645,37 @@ First 5 rows:
         // Make utils globally available
         window.engunityUtils = utils;
 
-        // Show complexity block after code generation
-        document.addEventListener('DOMContentLoaded', () => {
-            const genBtn = document.getElementById('generate-code-btn');
-            const complexityBlock = document.getElementById('complexity-block');
-            if (genBtn && complexityBlock) {
-                genBtn.addEventListener('click', () => {
-                    // Here you could analyze the code and set the complexity dynamically
-                    // For now, just show the block
-                    complexityBlock.style.display = 'flex';
-                });
+        // Global API utilities
+        window.apiUtils = {
+            async apiCall(url, options = {}) {
+                const token = await this.getAuthToken();
+                
+                if (token) {
+                    options.headers = {
+                        ...options.headers,
+                        'Authorization': `Bearer ${token}`
+                    };
+                }
+                
+                const response = await fetch(url, options);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return response;
+            },
+
+            async getAuthToken() {
+                try {
+                    const { data: { session } } = await supabaseClient.auth.getSession();
+                    return session?.access_token;
+                } catch (error) {
+                    console.error('Error getting auth token:', error);
+                    return null;
+                }
             }
-        });
+        };
     </script>
 </body>
 </html>

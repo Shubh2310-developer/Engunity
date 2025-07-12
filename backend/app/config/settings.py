@@ -20,8 +20,24 @@ class Settings(BaseSettings):
     # Database Configuration (for direct PostgreSQL access if needed)
     database_url: str = "sqlite:///./engunity.db"
     
+    # MongoDB Configuration
+    mongodb_url: str = "mongodb://localhost:27017"
+    mongodb_database: str = "Chats"
+    
     # Security
     SECRET_KEY: str = "your-secret-key-change-in-production"
+    
+    # Groq Configuration
+    groq_api_key: str = ""
+    
+    # Fallback Groq API Keys (for when users don't have their own keys)
+    fallback_groq_keys: List[str] = [
+        "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",
+        "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",
+        "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",
+        "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",
+        "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"
+    ]
     
     # CORS
     allowed_hosts: List[str] = ["*"]
@@ -43,6 +59,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = False
+        env_file_encoding = 'utf-8'
 
 # Create settings instance
 settings = Settings()
