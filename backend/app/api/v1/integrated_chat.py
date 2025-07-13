@@ -58,8 +58,13 @@ async def integrated_chat(
 ):
     """Handle integrated chat with automatic code generation detection."""
     try:
-        # Get user ID
-        user_id = current_user.get("id") or current_user.get("sub") or str(current_user.get("email", "unknown"))
+        # Get user ID - handle both dict and User object
+        if hasattr(current_user, 'id'):
+            user_id = current_user.id
+        elif hasattr(current_user, 'get'):
+            user_id = current_user.get("id") or current_user.get("sub") or str(current_user.get("email", "unknown"))
+        else:
+            user_id = getattr(current_user, 'sub', None) or getattr(current_user, 'email', 'unknown')
         
         # Create chat if needed
         chat_id = request.chat_id
@@ -350,7 +355,13 @@ async def get_chat_history(
 ):
     """Get chat history for a specific chat."""
     try:
-        user_id = current_user.get("id") or current_user.get("sub") or str(current_user.get("email", "unknown"))
+        # Get user ID - handle both dict and User object
+        if hasattr(current_user, 'id'):
+            user_id = current_user.id
+        elif hasattr(current_user, 'get'):
+            user_id = current_user.get("id") or current_user.get("sub") or str(current_user.get("email", "unknown"))
+        else:
+            user_id = getattr(current_user, 'sub', None) or getattr(current_user, 'email', 'unknown')
         
         chat = await repo_manager.chat_repo.get_chat_by_id(chat_id)
         if not chat or chat.user_id != user_id:
@@ -394,7 +405,13 @@ async def get_user_chats(
 ):
     """Get user's chat history."""
     try:
-        user_id = current_user.get("id") or current_user.get("sub") or str(current_user.get("email", "unknown"))
+        # Get user ID - handle both dict and User object
+        if hasattr(current_user, 'id'):
+            user_id = current_user.id
+        elif hasattr(current_user, 'get'):
+            user_id = current_user.get("id") or current_user.get("sub") or str(current_user.get("email", "unknown"))
+        else:
+            user_id = getattr(current_user, 'sub', None) or getattr(current_user, 'email', 'unknown')
         
         chats = await repo_manager.chat_repo.get_user_chats(user_id, limit, offset)
         
