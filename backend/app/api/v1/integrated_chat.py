@@ -50,8 +50,142 @@ async def get_current_user(token: str = Depends(security)):
     return user
 
 
-@router.post("/integrated-chat", response_model=IntegratedChatResponse)
+@router.post("/integrated-chat-test")
+async def integrated_chat_test(
+    request: IntegratedChatRequest,
+    repo_manager: RepositoryManager = Depends(get_repository_manager)
+):
+    """Test integrated chat without authentication."""
+    try:
+        # Use a test user ID
+        user_id = "test_user_123"
+        
+        # Create chat if needed
+        chat_id = request.chat_id
+        if not chat_id:
+            chat_title = generate_chat_title(request.message)
+            chat_id = await repo_manager.chat_repo.create_chat(user_id, chat_title)
+        
+        # Detect if this is a code-related request
+        is_code_request = detect_code_request(request.message) if request.auto_detect_code else False
+        
+        response_type = "code" if is_code_request else "chat"
+        response_content = ""
+        metadata = {}
+        code_snippets = []
+        
+        if is_code_request:
+            # Handle code generation
+            code_result = await handle_code_generation(request.message, user_id, chat_id, repo_manager)
+            response_content = code_result["response"]
+            metadata = code_result["metadata"]
+            code_snippets = code_result["code_snippets"]
+        else:
+            # Handle regular chat
+            chat_result = await handle_chat_completion(request, user_id, chat_id, repo_manager)
+            response_content = chat_result["response"]
+            metadata = chat_result["metadata"]
+        
+        # Save conversation to MongoDB
+        if request.save_conversation:
+            await save_conversation_to_mongo(
+                chat_id=chat_id,
+                user_message=request.message,
+                assistant_response=response_content,
+                user_id=user_id,
+                response_type=response_type,
+                metadata=metadata,
+                repo_manager=repo_manager
+            )
+        
+        return {
+            "response": response_content,
+            "response_type": response_type,
+            "chat_id": chat_id,
+            "metadata": metadata,
+            "code_snippets": code_snippets
+        }
+        
+    except Exception as e:
+        import traceback
+        error_details = f"Integrated chat failed: {str(e)}"
+        print(f"Integrated chat error: {error_details}")
+        print(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=error_details
+        )
+
+
+@router.post("/integrated-chat")
 async def integrated_chat(
+    request: IntegratedChatRequest,
+    repo_manager: RepositoryManager = Depends(get_repository_manager)
+):
+    """Handle integrated chat - temporarily without authentication for testing."""
+    try:
+        # Use a default user ID for testing
+        user_id = "default_user_123"
+        
+        # Create chat if needed
+        chat_id = request.chat_id
+        if not chat_id:
+            chat_title = generate_chat_title(request.message)
+            chat_id = await repo_manager.chat_repo.create_chat(user_id, chat_title)
+        
+        # Detect if this is a code-related request
+        is_code_request = detect_code_request(request.message) if request.auto_detect_code else False
+        
+        response_type = "code" if is_code_request else "chat"
+        response_content = ""
+        metadata = {}
+        code_snippets = []
+        
+        if is_code_request:
+            # Handle code generation
+            code_result = await handle_code_generation(request.message, user_id, chat_id, repo_manager)
+            response_content = code_result["response"]
+            metadata = code_result["metadata"]
+            code_snippets = code_result["code_snippets"]
+        else:
+            # Handle regular chat
+            chat_result = await handle_chat_completion(request, user_id, chat_id, repo_manager)
+            response_content = chat_result["response"]
+            metadata = chat_result["metadata"]
+        
+        # Save conversation to MongoDB
+        if request.save_conversation:
+            await save_conversation_to_mongo(
+                chat_id=chat_id,
+                user_message=request.message,
+                assistant_response=response_content,
+                user_id=user_id,
+                response_type=response_type,
+                metadata=metadata,
+                repo_manager=repo_manager
+            )
+        
+        return {
+            "response": response_content,
+            "response_type": response_type,
+            "chat_id": chat_id,
+            "metadata": metadata,
+            "code_snippets": code_snippets
+        }
+        
+    except Exception as e:
+        import traceback
+        error_details = f"Integrated chat failed: {str(e)}"
+        print(f"Integrated chat error: {error_details}")
+        print(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=error_details
+        )
+
+
+@router.post("/integrated-chat-auth", response_model=IntegratedChatResponse)
+async def integrated_chat_auth(
     request: IntegratedChatRequest,
     current_user=Depends(get_current_user),
     repo_manager: RepositoryManager = Depends(get_repository_manager)

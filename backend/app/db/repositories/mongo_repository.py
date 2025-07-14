@@ -7,7 +7,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorCollection
 
 from ...models.mongo_models import (
     ChatHistory, ChatMessage, CodeSnippet, 
-    ImageDocument, PDFDocument, UserStatistics
+    ImageDocument, PDFDocument, UserStatistics, APIUsage
 )
 from ...config.database import get_mongo_db
 
@@ -28,7 +28,7 @@ class ChatRepository(MongoRepository):
     """Repository for chat history operations."""
     
     def __init__(self, db: AsyncIOMotorDatabase):
-        super().__init__(db, "chat_history")
+        super().__init__(db, "chats")
     
     async def create_indexes(self):
         """Create indexes for chat history collection."""
@@ -367,6 +367,75 @@ class UserStatsRepository(MongoRepository):
             return False
 
 
+class APIRepository(MongoRepository):
+    """Repository for API usage tracking."""
+    
+    def __init__(self, db: AsyncIOMotorDatabase):
+        super().__init__(db, "api's")
+    
+    async def create_indexes(self):
+        """Create indexes for API usage collection."""
+        await self.collection.create_index("user_id")
+        await self.collection.create_index("endpoint")
+        await self.collection.create_index("timestamp")
+        await self.collection.create_index([("user_id", 1), ("timestamp", -1)])
+    
+    async def log_api_usage(self, user_id: str, endpoint: str, method: str, 
+                          response_status: int, response_time: float, 
+                          metadata: Optional[Dict[str, Any]] = None) -> str:
+        """Log API usage."""
+        api_usage = APIUsage(
+            user_id=user_id,
+            endpoint=endpoint,
+            method=method,
+            response_status=response_status,
+            response_time=response_time,
+            metadata=metadata or {},
+            timestamp=datetime.utcnow()
+        )
+        
+        result = await self.collection.insert_one(api_usage.dict(by_alias=True))
+        return str(result.inserted_id)
+    
+    async def get_user_api_usage(self, user_id: str, limit: int = 100, 
+                               offset: int = 0) -> List[APIUsage]:
+        """Get user's API usage history."""
+        cursor = self.collection.find({"user_id": user_id}).sort("timestamp", -1).skip(offset).limit(limit)
+        usage_logs = []
+        async for doc in cursor:
+            usage_logs.append(APIUsage(**doc))
+        return usage_logs
+    
+    async def get_api_stats(self, user_id: str, start_date: Optional[datetime] = None, 
+                          end_date: Optional[datetime] = None) -> Dict[str, Any]:
+        """Get API usage statistics."""
+        match_filter = {"user_id": user_id}
+        if start_date or end_date:
+            date_filter = {}
+            if start_date:
+                date_filter["$gte"] = start_date
+            if end_date:
+                date_filter["$lte"] = end_date
+            match_filter["timestamp"] = date_filter
+        
+        pipeline = [
+            {"$match": match_filter},
+            {"$group": {
+                "_id": None,
+                "total_requests": {"$sum": 1},
+                "avg_response_time": {"$avg": "$response_time"},
+                "success_rate": {
+                    "$avg": {"$cond": [{"$lt": ["$response_status", 400]}, 1, 0]}
+                }
+            }}
+        ]
+        
+        result = await self.collection.aggregate(pipeline).to_list(1)
+        if result:
+            return result[0]
+        return {"total_requests": 0, "avg_response_time": 0, "success_rate": 0}
+
+
 class RepositoryManager:
     """Manager for all MongoDB repositories."""
     
@@ -377,6 +446,7 @@ class RepositoryManager:
         self.image_repo = ImageRepository(db)
         self.pdf_repo = PDFRepository(db)
         self.stats_repo = UserStatsRepository(db)
+        self.api_repo = APIRepository(db)
     
     async def create_all_indexes(self):
         """Create all database indexes."""
@@ -385,6 +455,7 @@ class RepositoryManager:
         await self.image_repo.create_indexes()
         await self.pdf_repo.create_indexes()
         await self.stats_repo.create_indexes()
+        await self.api_repo.create_indexes()
 
 
 # Global repository manager
