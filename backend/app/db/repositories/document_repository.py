@@ -396,6 +396,25 @@ class DocumentRepository:
             logger.error(f"Error logging Q&A interaction: {e}")
             raise DatabaseError(f"Failed to log interaction: {str(e)}")
     
+    async def save_qa_interaction(self, interaction: DocumentQAInteraction) -> None:
+        """
+        Save a Q&A interaction (alias for compatibility).
+        
+        Args:
+            interaction: DocumentQAInteraction instance
+        """
+        try:
+            self.db.add(interaction)
+            self.db.commit()
+            self.db.refresh(interaction)
+            
+            logger.info(f"Saved Q&A interaction for document {interaction.document_id}")
+            
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            logger.error(f"Error saving Q&A interaction: {e}")
+            raise DatabaseError(f"Failed to save interaction: {str(e)}")
+    
     async def get_user_document_stats(self, user_id: UUID) -> Dict[str, Any]:
         """
         Get document statistics for a user.

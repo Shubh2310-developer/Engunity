@@ -95,17 +95,41 @@ class SupabaseAuthService:
         """Get user information from access token."""
         try:
             import asyncio
+            import logging
+            logger = logging.getLogger(__name__)
+            
+            logger.info(f"Validating token with Supabase: {access_token[:20]}...")
+            
             # Set the session and get user with timeout
             response = await asyncio.wait_for(
                 asyncio.to_thread(self.supabase.auth.get_user, access_token),
-                timeout=5.0  # 5 second timeout
+                timeout=10.0  # 10 second timeout
             )
-            return response.user if response.user else None
+            
+            if response.user:
+                logger.info(f"Token validation successful for user: {getattr(response.user, 'email', 'unknown')}")
+                return response.user
+            else:
+                logger.warning("Token validation failed - no user returned")
+                return None
+                
         except asyncio.TimeoutError:
-            print("Authentication timeout - Supabase took too long to respond")
+            logger.error("Authentication timeout - Supabase took too long to respond")
             return None
         except Exception as e:
-            print(f"Authentication error: {e}")
+            logger.error(f"Authentication error: {e}")
+            # Try alternative validation method
+            try:
+                logger.info("Trying alternative token validation...")
+                # Alternative: try using the token directly with get_session
+                self.supabase.auth.set_session(access_token, None)
+                session = self.supabase.auth.get_session()
+                if session and session.user:
+                    logger.info("Alternative validation successful")
+                    return session.user
+            except Exception as alt_e:
+                logger.error(f"Alternative validation also failed: {alt_e}")
+            
             return None
     
     async def refresh_session(self, refresh_token: str) -> Dict[str, Any]:

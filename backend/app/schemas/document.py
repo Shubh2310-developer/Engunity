@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any, Union
 from uuid import UUID
 
-from pydantic import BaseModel, Field, validator, root_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 # Base schemas for common fields
@@ -17,7 +17,8 @@ class DocumentBase(BaseModel):
     description: Optional[str] = Field(None, max_length=1000, description="Document description")
     tags: List[str] = Field(default=[], description="Document tags for categorization")
     
-    @validator('tags')
+    @field_validator('tags')
+    @classmethod
     def validate_tags(cls, v):
         """Validate tags format."""
         if v is None:
@@ -26,7 +27,8 @@ class DocumentBase(BaseModel):
         valid_tags = [tag.strip() for tag in v if tag.strip()][:10]
         return valid_tags
     
-    @validator('title')
+    @field_validator('title')
+    @classmethod
     def validate_title(cls, v):
         """Validate title format."""
         return v.strip()
@@ -49,7 +51,8 @@ class DocumentUpdate(BaseModel):
     tags: Optional[List[str]] = Field(None)
     is_public: Optional[bool] = Field(None)
     
-    @validator('tags')
+    @field_validator('tags')
+    @classmethod
     def validate_tags(cls, v):
         """Validate tags format."""
         if v is None:
@@ -66,7 +69,8 @@ class DocumentQARequest(BaseModel):
     stream: Optional[bool] = Field(False, description="Whether to stream the response")
     context_window: Optional[int] = Field(4000, ge=1000, le=8000, description="Context window size in tokens")
     
-    @validator('question')
+    @field_validator('question')
+    @classmethod
     def validate_question(cls, v):
         """Validate question format."""
         return v.strip()
@@ -74,7 +78,7 @@ class DocumentQARequest(BaseModel):
 
 class DocumentSummaryRequest(BaseModel):
     """Schema for document summarization requests."""
-    summary_type: str = Field("comprehensive", regex="^(brief|comprehensive|key_points)$", description="Type of summary to generate")
+    summary_type: str = Field("comprehensive", pattern="^(brief|comprehensive|key_points)$", description="Type of summary to generate")
     max_length: Optional[int] = Field(500, ge=100, le=2000, description="Maximum summary length in words")
     focus_areas: Optional[List[str]] = Field(default=[], description="Specific areas to focus on in summary")
 
@@ -100,7 +104,7 @@ class ContextSource(BaseModel):
     relevance_score: float = Field(description="Relevance score for this source")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "chunk_id": "123e4567-e89b-12d3-a456-426614174000",
                 "page_number": 1,
@@ -136,8 +140,8 @@ class DocumentResponse(DocumentBase):
     updated_at: datetime = Field(description="Last update timestamp")
     
     class Config:
-        orm_mode = True
-        schema_extra = {
+        from_attributes = True
+        json_schema_extra = {
             "example": {
                 "id": "123e4567-e89b-12d3-a456-426614174000",
                 "title": "Research Paper on AI Ethics",
@@ -161,7 +165,7 @@ class DocumentListResponse(BaseModel):
     limit: int = Field(description="Maximum number of documents returned")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "documents": [],
                 "total": 150,
@@ -181,7 +185,7 @@ class DocumentQAResponse(BaseModel):
     chunks_used: Optional[int] = Field(description="Number of chunks used for context")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "answer": "Based on the document, AI ethics involves consideration of fairness, transparency, and accountability in algorithmic decision-making.",
                 "confidence_score": 0.92,
@@ -209,7 +213,7 @@ class DocumentSummaryResponse(BaseModel):
     generated_at: datetime = Field(description="When summary was generated")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "summary": "This paper presents a comprehensive analysis of AI ethics...",
                 "summary_type": "comprehensive",
@@ -234,7 +238,7 @@ class DocumentSearchResponse(BaseModel):
     total_found: int = Field(description="Total number of passages found")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "query": "machine learning algorithms",
                 "document_id": "123e4567-e89b-12d3-a456-426614174000",
@@ -258,7 +262,7 @@ class DocumentFolderCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255, description="Folder name")
     description: Optional[str] = Field(None, max_length=1000, description="Folder description")
     parent_id: Optional[UUID] = Field(None, description="Parent folder ID")
-    color: Optional[str] = Field(None, regex="^#[0-9A-Fa-f]{6}$", description="Folder color (hex)")
+    color: Optional[str] = Field(None, pattern="^#[0-9A-Fa-f]{6}$", description="Folder color (hex)")
 
 
 class DocumentFolderResponse(BaseModel):
@@ -274,7 +278,7 @@ class DocumentFolderResponse(BaseModel):
     updated_at: datetime = Field(description="Last update timestamp")
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # Sharing schemas
@@ -305,7 +309,7 @@ class DocumentShareResponse(BaseModel):
     created_at: datetime = Field(description="Creation timestamp")
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # Analytics schemas
@@ -371,7 +375,7 @@ class DocumentTemplateResponse(BaseModel):
     created_at: datetime = Field(description="Creation timestamp")
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # Citation schemas
@@ -390,4 +394,4 @@ class CitationSourceResponse(BaseModel):
     ieee_format: Optional[str] = Field(description="IEEE format citation")
     
     class Config:
-        orm_mode = True
+        from_attributes = True

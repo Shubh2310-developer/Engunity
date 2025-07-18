@@ -7,7 +7,8 @@ from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorCollection
 
 from ...models.mongo_models import (
     ChatHistory, ChatMessage, CodeSnippet, 
-    ImageDocument, PDFDocument, UserStatistics, APIUsage
+    ImageDocument, PDFDocument, UserStatistics, APIUsage,
+    DocumentQAModel, DocumentChunkModel, DocumentQAInteractionModel
 )
 from ...config.database import get_mongo_db
 
@@ -436,6 +437,171 @@ class APIRepository(MongoRepository):
         return {"total_requests": 0, "avg_response_time": 0, "success_rate": 0}
 
 
+class DocumentQARepository(MongoRepository):
+    """Repository for document Q&A operations."""
+    
+    def __init__(self, db: AsyncIOMotorDatabase):
+        super().__init__(db, "document_qa")
+    
+    async def create_indexes(self):
+        """Create indexes for document Q&A collection."""
+        await self.collection.create_index("user_id")
+        await self.collection.create_index("created_at")
+        await self.collection.create_index("processing_status")
+        await self.collection.create_index([("user_id", 1), ("created_at", -1)])
+        await self.collection.create_index([("title", "text"), ("description", "text")])
+    
+    async def create_document(self, document_data: Dict[str, Any]) -> str:
+        """Create a new document Q&A record."""
+        doc = DocumentQAModel(**document_data)
+        result = await self.collection.insert_one(doc.dict(by_alias=True))
+        return str(result.inserted_id)
+    
+    async def get_document_by_id(self, doc_id: str) -> Optional[DocumentQAModel]:
+        """Get document by ID."""
+        try:
+            doc = await self.collection.find_one({"_id": ObjectId(doc_id)})
+            if doc:
+                return DocumentQAModel(**doc)
+            return None
+        except Exception:
+            return None
+    
+    async def get_user_documents(self, user_id: str, limit: int = 20, offset: int = 0, 
+                                status: Optional[str] = None) -> List[DocumentQAModel]:
+        """Get user's documents."""
+        filter_dict = {"user_id": user_id}
+        if status:
+            filter_dict["processing_status"] = status
+            
+        cursor = self.collection.find(filter_dict).sort("created_at", -1).skip(offset).limit(limit)
+        docs = []
+        async for doc in cursor:
+            docs.append(DocumentQAModel(**doc))
+        return docs
+    
+    async def update_document(self, doc_id: str, update_data: Dict[str, Any]) -> bool:
+        """Update document."""
+        try:
+            update_data["updated_at"] = datetime.utcnow()
+            result = await self.collection.update_one(
+                {"_id": ObjectId(doc_id)},
+                {"$set": update_data}
+            )
+            return result.modified_count > 0
+        except Exception:
+            return False
+    
+    async def delete_document(self, doc_id: str, user_id: str) -> bool:
+        """Delete document."""
+        try:
+            result = await self.collection.delete_one({
+                "_id": ObjectId(doc_id),
+                "user_id": user_id
+            })
+            return result.deleted_count > 0
+        except Exception:
+            return False
+    
+    async def search_documents(self, user_id: str, query: str, limit: int = 10) -> List[DocumentQAModel]:
+        """Search documents by title/description."""
+        cursor = self.collection.find({
+            "user_id": user_id,
+            "$text": {"$search": query}
+        }).sort("created_at", -1).limit(limit)
+        
+        docs = []
+        async for doc in cursor:
+            docs.append(DocumentQAModel(**doc))
+        return docs
+
+
+class DocumentChunkRepository(MongoRepository):
+    """Repository for document chunks."""
+    
+    def __init__(self, db: AsyncIOMotorDatabase):
+        super().__init__(db, "document_chunks")
+    
+    async def create_indexes(self):
+        """Create indexes for document chunks collection."""
+        await self.collection.create_index("document_id")
+        await self.collection.create_index("chunk_index")
+        await self.collection.create_index([("document_id", 1), ("chunk_index", 1)])
+    
+    async def create_chunk(self, chunk_data: Dict[str, Any]) -> str:
+        """Create a new chunk."""
+        chunk = DocumentChunkModel(**chunk_data)
+        result = await self.collection.insert_one(chunk.dict(by_alias=True))
+        return str(result.inserted_id)
+    
+    async def get_document_chunks(self, document_id: str, limit: int = 100, 
+                                 offset: int = 0) -> List[DocumentChunkModel]:
+        """Get chunks for a document."""
+        cursor = self.collection.find({"document_id": document_id}).sort("chunk_index", 1).skip(offset).limit(limit)
+        chunks = []
+        async for chunk in cursor:
+            chunks.append(DocumentChunkModel(**chunk))
+        return chunks
+    
+    async def delete_document_chunks(self, document_id: str) -> bool:
+        """Delete all chunks for a document."""
+        try:
+            result = await self.collection.delete_many({"document_id": document_id})
+            return result.deleted_count > 0
+        except Exception:
+            return False
+
+
+class DocumentQAInteractionRepository(MongoRepository):
+    """Repository for document Q&A interactions."""
+    
+    def __init__(self, db: AsyncIOMotorDatabase):
+        super().__init__(db, "document_qa_interactions")
+    
+    async def create_indexes(self):
+        """Create indexes for Q&A interactions collection."""
+        await self.collection.create_index("document_id")
+        await self.collection.create_index("user_id")
+        await self.collection.create_index("created_at")
+        await self.collection.create_index([("document_id", 1), ("created_at", -1)])
+        await self.collection.create_index([("user_id", 1), ("created_at", -1)])
+    
+    async def create_interaction(self, interaction_data: Dict[str, Any]) -> str:
+        """Create a new Q&A interaction."""
+        interaction = DocumentQAInteractionModel(**interaction_data)
+        result = await self.collection.insert_one(interaction.dict(by_alias=True))
+        return str(result.inserted_id)
+    
+    async def get_document_interactions(self, document_id: str, user_id: str, 
+                                      limit: int = 50) -> List[DocumentQAInteractionModel]:
+        """Get Q&A interactions for a document."""
+        cursor = self.collection.find({
+            "document_id": document_id,
+            "user_id": user_id
+        }).sort("created_at", -1).limit(limit)
+        
+        interactions = []
+        async for interaction in cursor:
+            interactions.append(DocumentQAInteractionModel(**interaction))
+        return interactions
+    
+    async def update_interaction_rating(self, interaction_id: str, user_id: str, 
+                                       rating: int, feedback: Optional[str] = None) -> bool:
+        """Update interaction rating."""
+        try:
+            update_data = {"user_rating": rating}
+            if feedback:
+                update_data["feedback"] = feedback
+                
+            result = await self.collection.update_one(
+                {"_id": ObjectId(interaction_id), "user_id": user_id},
+                {"$set": update_data}
+            )
+            return result.modified_count > 0
+        except Exception:
+            return False
+
+
 class RepositoryManager:
     """Manager for all MongoDB repositories."""
     
@@ -447,6 +613,9 @@ class RepositoryManager:
         self.pdf_repo = PDFRepository(db)
         self.stats_repo = UserStatsRepository(db)
         self.api_repo = APIRepository(db)
+        self.document_qa_repo = DocumentQARepository(db)
+        self.document_chunk_repo = DocumentChunkRepository(db)
+        self.document_qa_interaction_repo = DocumentQAInteractionRepository(db)
     
     async def create_all_indexes(self):
         """Create all database indexes."""
@@ -456,6 +625,9 @@ class RepositoryManager:
         await self.pdf_repo.create_indexes()
         await self.stats_repo.create_indexes()
         await self.api_repo.create_indexes()
+        await self.document_qa_repo.create_indexes()
+        await self.document_chunk_repo.create_indexes()
+        await self.document_qa_interaction_repo.create_indexes()
 
 
 # Global repository manager

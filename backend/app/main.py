@@ -1,8 +1,10 @@
 """Main FastAPI application."""
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
+from fastapi.exception_handlers import http_exception_handler
 from contextlib import asynccontextmanager
 
 from .config.settings import settings
@@ -26,6 +28,20 @@ app = FastAPI(
     debug=settings.debug,
     lifespan=lifespan,
 )
+
+# Custom exception handler for authentication
+@app.exception_handler(HTTPException)
+async def custom_http_exception_handler(request: Request, exc: HTTPException):
+    """Handle HTTP exceptions, especially 401 Unauthorized for document endpoints."""
+    # If it's a 401 error on document endpoints, redirect to login
+    if exc.status_code == 401 and request.url.path.startswith('/api/v1/documents'):
+        # Check if request accepts HTML (browser request vs API request)
+        accept_header = request.headers.get('accept', '')
+        if 'text/html' in accept_header:
+            return RedirectResponse(url='/login.html', status_code=302)
+    
+    # For all other cases, use default handler
+    return await http_exception_handler(request, exc)
 
 # CORS middleware
 app.add_middleware(
@@ -51,4 +67,6 @@ async def health_check_simple():
 app.include_router(api_router, prefix="/api/v1")
 
 # Serve static files (your HTML pages) - should be last
-app.mount("/", StaticFiles(directory="../frontend/public", html=True), name="static")
+import os
+static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend/public"))
+app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")

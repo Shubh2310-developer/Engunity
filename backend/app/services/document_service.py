@@ -14,19 +14,27 @@ from uuid import UUID
 from datetime import datetime
 from pathlib import Path
 
-import PyPDF2
+try:
+    import PyMuPDF  # fitz for PDF processing
+except ImportError:
+    try:
+        import fitz as PyMuPDF  # Alternative import name
+    except ImportError:
+        PyMuPDF = None
 import docx
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import FAISS
+import numpy as np
+import markdown
 from sqlalchemy.orm import Session
 import tiktoken
 
-from app.core.config import settings
+from app.config.settings import settings
 from app.models.document import Document, DocumentChunk
 from app.schemas.document import DocumentCreate
 from app.db.repositories.document_repository import DocumentRepository
 from app.services.file_service import FileService
+from app.services.embedding_service import EmbeddingService
+from app.services.vector_store import FAISSVectorStore
+from app.services.simple_vector_store import SimpleVectorStore
 from app.core.exceptions import DocumentProcessingError, FileStorageError
 
 logger = logging.getLogger(__name__)
@@ -37,19 +45,14 @@ class DocumentService:
     
     def __init__(self):
         self.file_service = FileService()
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name=settings.EMBEDDING_MODEL_NAME,
-            model_kwargs={'device': 'cpu'}
-        )
-        self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=settings.CHUNK_SIZE,
-            chunk_overlap=settings.CHUNK_OVERLAP,
-            separators=["\n\n", "\n", ".", "!", "?", ",", " ", ""]
-        )
+        self.embedding_service = EmbeddingService()
+        # Use simple vector store as default since FAISS has compatibility issues
+        logger.info("Using simple vector store")
+        self.vector_store = SimpleVectorStore(self.embedding_service)
         self.tokenizer = tiktoken.get_encoding("cl100k_base")
         
         # Ensure vector store directory exists
-        os.makedirs(settings.VECTOR_STORE_PATH, exist_ok=True)
+        os.makedirs(settings.vector_store_path, exist_ok=True)
     
     async def upload_document(
         self,
@@ -77,7 +80,8 @@ class DocumentService:
             file_path = await self.file_service.upload_file(
                 file=file,
                 bucket="documents",
-                user_id=str(user_id)
+                user_id=str(user_id),
+                filename=document_data.filename
             )
             
             # Create document record
@@ -171,6 +175,8 @@ class DocumentService:
                 return await self._extract_docx_text(file_content)
             elif file_type == "text/plain":
                 return file_content.decode('utf-8', errors='ignore')
+            elif file_type == "text/markdown":
+                return await self._extract_markdown_text(file_content)
             else:
                 raise DocumentProcessingError(f"Unsupported file type: {file_type}")
                 
@@ -179,21 +185,25 @@ class DocumentService:
             raise DocumentProcessingError(f"Failed to extract text: {str(e)}")
     
     async def _extract_pdf_text(self, file_content: bytes) -> str:
-        """Extract text from PDF file."""
+        """Extract text from PDF file using PyMuPDF."""
         try:
+            if PyMuPDF is None:
+                raise DocumentProcessingError("PyMuPDF is not installed. Please install it to process PDF files.")
+            
             with tempfile.NamedTemporaryFile() as temp_file:
                 temp_file.write(file_content)
                 temp_file.flush()
                 
                 text_content = ""
-                with open(temp_file.name, 'rb') as pdf_file:
-                    pdf_reader = PyPDF2.PdfReader(pdf_file)
-                    
-                    for page_num, page in enumerate(pdf_reader.pages):
-                        page_text = page.extract_text()
-                        if page_text.strip():
-                            text_content += f"\n--- Page {page_num + 1} ---\n{page_text}\n"
+                pdf_doc = PyMuPDF.open(temp_file.name)
                 
+                for page_num in range(len(pdf_doc)):
+                    page = pdf_doc.load_page(page_num)
+                    page_text = page.get_text()
+                    if page_text.strip():
+                        text_content += f"\n--- Page {page_num + 1} ---\n{page_text}\n"
+                
+                pdf_doc.close()
                 return text_content
                 
         except Exception as e:
@@ -230,6 +240,20 @@ class DocumentService:
             logger.error(f"Error extracting DOCX text: {e}")
             raise DocumentProcessingError(f"Failed to extract DOCX text: {str(e)}")
     
+    async def _extract_markdown_text(self, file_content: bytes) -> str:
+        """Extract text from Markdown file."""
+        try:
+            md_content = file_content.decode('utf-8', errors='ignore')
+            # Convert markdown to plain text
+            html = markdown.markdown(md_content)
+            # Simple HTML tag removal
+            import re
+            clean_text = re.sub(r'<[^>]+>', '', html)
+            return clean_text
+        except Exception as e:
+            logger.error(f"Error extracting Markdown text: {e}")
+            raise DocumentProcessingError(f"Failed to extract Markdown text: {str(e)}")
+    
     async def _create_text_chunks(
         self, 
         text_content: str, 
@@ -246,13 +270,21 @@ class DocumentService:
             List of DocumentChunk objects
         """
         try:
-            # Split text into chunks
-            text_chunks = self.text_splitter.split_text(text_content)
+            # Simple text splitting based on chunk size
+            chunk_size = settings.chunk_size
+            chunk_overlap = settings.chunk_overlap
             
             chunks = []
             current_page = 1
             
-            for i, chunk_text in enumerate(text_chunks):
+            # Split text into chunks with overlap
+            text_len = len(text_content)
+            for i in range(0, text_len, chunk_size - chunk_overlap):
+                chunk_text = text_content[i:i + chunk_size]
+                
+                if not chunk_text.strip():
+                    continue
+                
                 # Count tokens
                 token_count = len(self.tokenizer.encode(chunk_text))
                 
@@ -266,7 +298,7 @@ class DocumentService:
                 
                 chunk = DocumentChunk(
                     document_id=document_id,
-                    chunk_index=i,
+                    chunk_index=len(chunks),
                     content=chunk_text,
                     token_count=token_count,
                     page_number=current_page
@@ -296,6 +328,10 @@ class DocumentService:
             if not chunks:
                 raise DocumentProcessingError("No chunks to process")
             
+            if self.vector_store is None:
+                logger.warning("Vector store not available, skipping embedding generation")
+                return
+            
             # Prepare texts and metadata
             texts = [chunk.content for chunk in chunks]
             metadatas = [
@@ -304,24 +340,26 @@ class DocumentService:
                     "chunk_id": str(chunk.id),
                     "chunk_index": chunk.chunk_index,
                     "page_number": chunk.page_number,
-                    "token_count": chunk.token_count
+                    "token_count": chunk.token_count,
+                    "content": chunk.content
                 }
                 for chunk in chunks
             ]
             
-            # Create FAISS vector store
-            vector_store = FAISS.from_texts(
-                texts=texts,
-                embedding=self.embeddings,
-                metadatas=metadatas
-            )
+            # Generate embeddings
+            embeddings = await self.embedding_service.generate_embeddings(texts)
             
-            # Save vector store to disk
-            vector_store_path = os.path.join(
-                settings.VECTOR_STORE_PATH, 
-                f"document_{document_id}"
-            )
-            vector_store.save_local(vector_store_path)
+            # Validate embeddings format
+            if not isinstance(embeddings, np.ndarray):
+                logger.error(f"Embeddings must be numpy array, got {type(embeddings)}")
+                raise DocumentProcessingError("Invalid embeddings format")
+            
+            if len(embeddings.shape) != 2:
+                logger.error(f"Embeddings must be 2D array, got shape {embeddings.shape}")
+                raise DocumentProcessingError("Invalid embeddings dimensions")
+            
+            # Create FAISS index
+            await self.vector_store.create_index(document_id, embeddings, metadatas)
             
             logger.info(f"Generated embeddings for document {document_id}")
             
@@ -329,37 +367,22 @@ class DocumentService:
             logger.error(f"Error generating vector embeddings: {e}")
             raise DocumentProcessingError(f"Failed to generate embeddings: {str(e)}")
     
-    async def get_document_vector_store(self, document_id: UUID) -> Optional[FAISS]:
+    async def get_document_vector_store(self, document_id: UUID) -> bool:
         """
-        Load FAISS vector store for a document.
+        Check if FAISS vector store exists for a document.
         
         Args:
             document_id: ID of the document
             
         Returns:
-            FAISS vector store or None if not found
+            True if vector store exists, False otherwise
         """
         try:
-            vector_store_path = os.path.join(
-                settings.VECTOR_STORE_PATH, 
-                f"document_{document_id}"
-            )
-            
-            if not os.path.exists(vector_store_path):
-                logger.warning(f"Vector store not found for document {document_id}")
-                return None
-            
-            vector_store = FAISS.load_local(
-                vector_store_path, 
-                self.embeddings,
-                allow_dangerous_deserialization=True
-            )
-            
-            return vector_store
+            return await self.vector_store.index_exists(document_id)
             
         except Exception as e:
-            logger.error(f"Error loading vector store for document {document_id}: {e}")
-            return None
+            logger.error(f"Error checking vector store for document {document_id}: {e}")
+            return False
     
     async def delete_document(self, document_id: UUID, db: Session) -> None:
         """
@@ -384,13 +407,7 @@ class DocumentService:
             
             # Delete vector store
             try:
-                vector_store_path = os.path.join(
-                    settings.VECTOR_STORE_PATH, 
-                    f"document_{document_id}"
-                )
-                if os.path.exists(vector_store_path):
-                    import shutil
-                    shutil.rmtree(vector_store_path)
+                await self.vector_store.delete_index(document_id)
             except Exception as e:
                 logger.warning(f"Error deleting vector store: {e}")
             
@@ -462,18 +479,7 @@ class DocumentService:
             Dictionary with document statistics
         """
         try:
-            vector_store = await self.get_document_vector_store(document_id)
-            
-            if not vector_store:
-                return {"error": "Vector store not available"}
-            
-            # Get basic stats
-            stats = {
-                "total_chunks": vector_store.index.ntotal,
-                "embedding_dimension": vector_store.index.d,
-                "index_type": type(vector_store.index).__name__
-            }
-            
+            stats = await self.vector_store.get_index_stats(document_id)
             return stats
             
         except Exception as e:
@@ -503,7 +509,7 @@ class DocumentService:
             }
             
             # Process documents concurrently (with limit)
-            semaphore = asyncio.Semaphore(settings.MAX_CONCURRENT_PROCESSING)
+            semaphore = asyncio.Semaphore(settings.max_concurrent_processing)
             
             async def process_single(doc_id):
                 async with semaphore:

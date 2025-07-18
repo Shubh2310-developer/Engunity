@@ -8,6 +8,7 @@ from .ai_chat import router as ai_chat_router
 from .code import router as code_router
 from .integrated_chat import router as integrated_chat_router
 from .test import router as test_router
+from .document_qa import router as document_qa_router
 
 api_router = APIRouter()
 
@@ -18,6 +19,7 @@ api_router.include_router(chat_router)
 api_router.include_router(ai_chat_router)
 api_router.include_router(code_router)
 api_router.include_router(integrated_chat_router)
+api_router.include_router(document_qa_router)
 api_router.include_router(test_router)
 
 __all__ = ["api_router"]

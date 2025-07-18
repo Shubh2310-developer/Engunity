@@ -291,16 +291,46 @@ async def handle_code_generation(message: str, user_id: str, chat_id: str, repo_
     # Extract language from message
     language = extract_language_from_message(message)
     
-    # Generate code using the code service
-    result = await code_service.generate_code(
-        prompt=message,
-        language=language,
-        complexity="intermediate",
-        include_comments=True,
-        include_tests=False,
-        max_tokens=2048,
-        temperature=0.3
+    # Generate code using a simpler approach
+    system_prompt = f"""You are an expert {language} developer. Generate clean, well-commented {language} code based on user requests. 
+    
+    Format your response with the code in a code block:
+    ```{language}
+    [code here]
+    ```
+    
+    Then provide a brief explanation of the code."""
+    
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": f"Create {language} code for: {message}"}
+    ]
+    
+    response = await create_groq_completion(
+        messages=messages,
+        temperature=0.2,
+        max_tokens=1024,
+        top_p=0.9
     )
+    
+    content = response["choices"][0]["message"]["content"]
+    
+    # Extract code from the response
+    import re
+    code_blocks = re.findall(rf'```{language}(.*?)```', content, re.DOTALL)
+    if code_blocks:
+        code = code_blocks[0].strip()
+        explanation = re.sub(rf'```{language}.*?```', '', content, flags=re.DOTALL).strip()
+    else:
+        code = content
+        explanation = "Generated code"
+    
+    result = {
+        "code": code,
+        "explanation": explanation,
+        "language": language,
+        "tokens_used": response.get("usage", {}).get("total_tokens", 0)
+    }
     
     # Save code snippet to MongoDB
     code_snippet = CodeSnippet(
@@ -567,4 +597,47 @@ async def get_user_chats(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get user chats: {str(e)}"
+        )
+
+
+@router.delete("/chat/{chat_id}")
+async def delete_chat(
+    chat_id: str,
+    current_user=Depends(get_current_user),
+    repo_manager: RepositoryManager = Depends(get_repository_manager)
+):
+    """Delete a specific chat."""
+    try:
+        # Get user ID - handle both dict and User object
+        if hasattr(current_user, 'id'):
+            user_id = current_user.id
+        elif hasattr(current_user, 'get'):
+            user_id = current_user.get("id") or current_user.get("sub") or str(current_user.get("email", "unknown"))
+        else:
+            user_id = getattr(current_user, 'sub', None) or getattr(current_user, 'email', 'unknown')
+        
+        # Check if chat exists and belongs to user
+        chat = await repo_manager.chat_repo.get_chat_by_id(chat_id)
+        if not chat or chat.user_id != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Chat not found"
+            )
+        
+        # Delete the chat
+        success = await repo_manager.chat_repo.delete_chat(chat_id, user_id)
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete chat"
+            )
+        
+        return {"message": "Chat deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete chat: {str(e)}"
         )

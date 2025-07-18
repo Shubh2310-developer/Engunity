@@ -18,7 +18,7 @@ class GroqService:
             raise ValueError("Groq API key is required")
         
         self.client = Groq(api_key=self.api_key)
-        self.model = "llama-3.3-70b-versatile"
+        self.model = "llama3-70b-8192"  # Using LLaMA3-70B as specified
     
     def _get_fallback_key(self) -> Optional[str]:
         """Get a random fallback API key from the configured keys."""
